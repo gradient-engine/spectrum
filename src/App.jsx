@@ -1,44 +1,45 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import BrandSlider from './components/BrandSlider'
-import ImageGrid from './components/ImageGrid'
-import metadata from './metadata.json'
+import ImageGrid   from './components/ImageGrid'
+import metadata    from './metadata.json'
+import { idbSet, idbDelete, idbGetAll } from './utils/db'
 import './App.css'
 
 const SPECTRUMS = [
   {
     group: 'VISUAL EXPRESSION',
     items: [
-      { key: 'minimal_decorative', left: 'Minimal', right: 'Decorative' },
-      { key: 'bold_subtle', left: 'Bold', right: 'Subtle' },
+      { key: 'minimal_decorative',        left: 'Minimal',      right: 'Decorative'    },
+      { key: 'bold_subtle',               left: 'Bold',         right: 'Subtle'        },
     ],
   },
   {
     group: 'PERSONALITY',
     items: [
-      { key: 'playful_formal', left: 'Playful', right: 'Formal' },
-      { key: 'emotional_rational', left: 'Emotional', right: 'Rational' },
+      { key: 'playful_formal',            left: 'Playful',      right: 'Formal'        },
+      { key: 'emotional_rational',        left: 'Emotional',    right: 'Rational'      },
     ],
   },
   {
     group: 'CULTURAL POSITION',
     items: [
-      { key: 'approachable_aspirational', left: 'Approachable', right: 'Aspirational' },
-      { key: 'rebellion_authority', left: 'Rebellion', right: 'Authority' },
-      { key: 'mass_niche', left: 'Mass', right: 'Niche' },
+      { key: 'approachable_aspirational', left: 'Approachable', right: 'Aspirational'  },
+      { key: 'rebellion_authority',       left: 'Rebellion',    right: 'Authority'     },
+      { key: 'mass_niche',                left: 'Mass',         right: 'Niche'         },
     ],
   },
   {
     group: 'STRATEGIC ORIENTATION',
     items: [
-      { key: 'innovation_craft', left: 'Innovation', right: 'Craft' },
-      { key: 'broad_focused', left: 'Broad', right: 'Focused' },
+      { key: 'innovation_craft',          left: 'Innovation',   right: 'Craft'         },
+      { key: 'broad_focused',             left: 'Broad',        right: 'Focused'       },
     ],
   },
 ]
 
-const ALL_KEYS = SPECTRUMS.flatMap(g => g.items.map(i => i.key))
+const ALL_KEYS       = SPECTRUMS.flatMap(g => g.items.map(i => i.key))
 const DEFAULT_VALUES = Object.fromEntries(ALL_KEYS.map(k => [k, 0]))
-const MAX_FILE_MB = 5
+const MAX_FILE_MB    = 5
 
 function passes(imageValue, sliderValue) {
   if (sliderValue === 0) return true
@@ -46,38 +47,60 @@ function passes(imageValue, sliderValue) {
   return Math.abs(imageValue - sliderValue) <= tolerance
 }
 
-function fileToBase64(file) {
+function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(reader.result.split(',')[1])
+    reader.onload  = e => resolve(e.target.result)
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
 }
 
+function loadSet(key) {
+  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')) }
+  catch { return new Set() }
+}
+
 export default function App() {
-  const [values, setValues]       = useState(DEFAULT_VALUES)
-  const [uploaded, setUploaded]   = useState({})   // { name: { url, tags } }
-  const [tagging, setTagging]     = useState([])   // names in-flight
-  const [tagErrors, setTagErrors] = useState([])   // names that failed
+  const [values,       setValues]   = useState(DEFAULT_VALUES)
+  const [uploaded,     setUploaded] = useState({})
+  const [tagging,      setTagging]  = useState([])
+  const [tagErrors,    setTagErrors]= useState([])
+  const [hiddenImages, setHidden]   = useState(() => loadSet('spectrum:hidden'))
+  const [deletedImages,setDeleted]  = useState(() => loadSet('spectrum:deleted'))
+  const [showHidden,   setShowHidden] = useState(false)
   const fileInputRef = useRef(null)
 
-  // All image names: static + uploaded
-  const images = useMemo(
-    () => [...Object.keys(metadata), ...Object.keys(uploaded)],
+  // Restore uploaded images from IndexedDB on mount
+  useEffect(() => {
+    idbGetAll().then(data => {
+      if (data && Object.keys(data).length > 0) setUploaded(data)
+    })
+  }, [])
+
+  // Persist hidden / deleted sets
+  useEffect(() => {
+    localStorage.setItem('spectrum:hidden',  JSON.stringify([...hiddenImages]))
+  }, [hiddenImages])
+  useEffect(() => {
+    localStorage.setItem('spectrum:deleted', JSON.stringify([...deletedImages]))
+  }, [deletedImages])
+
+  const allImages = useMemo(() => [
+    ...Object.keys(metadata).filter(f => !deletedImages.has(f)),
+    ...Object.keys(uploaded).filter(f  => !deletedImages.has(f)),
+  ], [uploaded, deletedImages])
+
+  const urlMap = useMemo(() =>
+    Object.fromEntries(Object.entries(uploaded).map(([n, { url }]) => [n, url])),
     [uploaded]
   )
 
-  // Blob URL map for uploaded images
-  const urlMap = useMemo(
-    () => Object.fromEntries(Object.entries(uploaded).map(([n, { url }]) => [n, url])),
-    [uploaded]
-  )
-
-  // Merged metadata
   const allMeta = useMemo(() => ({
     ...metadata,
-    ...Object.fromEntries(Object.entries(uploaded).map(([n, { tags }]) => [n, tags])),
+    ...Object.fromEntries(
+      Object.entries(uploaded).map(([n, { tags }]) => [n, tags ?? {}])
+    ),
   }), [uploaded])
 
   const activeCount = useMemo(
@@ -87,23 +110,43 @@ export default function App() {
 
   const visibleSet = useMemo(() => {
     const s = new Set()
-    for (const filename of images) {
-      const meta = allMeta[filename] || {}
-      if (ALL_KEYS.every(key => passes(meta[key] ?? 0, values[key]))) s.add(filename)
+    for (const f of allImages) {
+      if (hiddenImages.has(f)) continue
+      const meta = allMeta[f] || {}
+      if (ALL_KEYS.every(k => passes(meta[k] ?? 0, values[k]))) s.add(f)
     }
     return s
-  }, [images, allMeta, values])
+  }, [allImages, hiddenImages, allMeta, values])
 
-  const sortedImages = useMemo(() => (
-    [...images].sort((a, b) => (visibleSet.has(a) ? 0 : 1) - (visibleSet.has(b) ? 0 : 1))
-  ), [images, visibleSet])
+  const sortedImages = useMemo(() => {
+    const pool = showHidden ? allImages : allImages.filter(f => !hiddenImages.has(f))
+    return [...pool].sort((a, b) => {
+      const aH = hiddenImages.has(a), bH = hiddenImages.has(b)
+      if (aH !== bH) return aH ? 1 : -1
+      return (visibleSet.has(a) ? 0 : 1) - (visibleSet.has(b) ? 0 : 1)
+    })
+  }, [allImages, hiddenImages, showHidden, visibleSet])
 
-  function handleChange(key, val) {
-    setValues(prev => ({ ...prev, [key]: val }))
+  const hiddenCount = useMemo(
+    () => allImages.filter(f => hiddenImages.has(f)).length,
+    [allImages, hiddenImages]
+  )
+
+  function handleChange(key, val) { setValues(prev => ({ ...prev, [key]: val })) }
+  function handleReset()          { setValues(DEFAULT_VALUES) }
+
+  function handleHide(filename) {
+    setHidden(prev => new Set([...prev, filename]))
   }
-
-  function handleReset() {
-    setValues(DEFAULT_VALUES)
+  function handleUnhide(filename) {
+    setHidden(prev => { const n = new Set(prev); n.delete(filename); return n })
+  }
+  function handleDelete(filename) {
+    setDeleted(prev => new Set([...prev, filename]))
+    if (uploaded[filename]) {
+      idbDelete(filename)
+      setUploaded(prev => { const n = { ...prev }; delete n[filename]; return n })
+    }
   }
 
   async function handleFileSelect(e) {
@@ -112,9 +155,7 @@ export default function App() {
     if (!files.length) return
 
     const tooBig = files.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
-    if (tooBig.length) {
-      alert(`Skipped (>${MAX_FILE_MB}MB):\n${tooBig.map(f => f.name).join('\n')}`)
-    }
+    if (tooBig.length) alert(`Skipped (>${MAX_FILE_MB}MB):\n${tooBig.map(f => f.name).join('\n')}`)
     const valid = files.filter(f => f.size <= MAX_FILE_MB * 1024 * 1024)
     if (!valid.length) return
 
@@ -122,23 +163,31 @@ export default function App() {
     setTagErrors(prev => prev.filter(n => !valid.find(f => f.name === n)))
 
     for (const file of valid) {
-      const blobUrl = URL.createObjectURL(file)
+      const dataUrl = await fileToDataUrl(file)
+      const base64  = dataUrl.split(',')[1]
+
+      // Show image immediately while tagging
+      setUploaded(prev => ({ ...prev, [file.name]: { url: dataUrl, tags: null } }))
+
       try {
-        const imageData = await fileToBase64(file)
         const res = await fetch('/api/tag', {
-          method: 'POST',
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageData, mimeType: file.type }),
+          body:    JSON.stringify({ imageData: base64, mimeType: file.type }),
         })
         if (!res.ok) throw new Error(await res.text())
-        const tags = await res.json()
-        setUploaded(prev => ({ ...prev, [file.name]: { url: blobUrl, tags } }))
+        const tags  = await res.json()
+        const entry = { url: dataUrl, tags }
+        await idbSet(file.name, entry)
+        setUploaded(prev => ({ ...prev, [file.name]: entry }))
         setTagging(prev => prev.filter(n => n !== file.name))
       } catch (err) {
         console.error('Tag error:', file.name, err)
+        const entry = { url: dataUrl, tags: Object.fromEntries(ALL_KEYS.map(k => [k, 0])) }
+        await idbSet(file.name, entry)
+        setUploaded(prev => ({ ...prev, [file.name]: entry }))
         setTagErrors(prev => [...prev, file.name])
         setTagging(prev => prev.filter(n => n !== file.name))
-        URL.revokeObjectURL(blobUrl)
       }
     }
   }
@@ -150,8 +199,7 @@ export default function App() {
     }
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' })
     const a = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(blob),
-      download: 'spectrum-results.json',
+      href: URL.createObjectURL(blob), download: 'spectrum-results.json',
     })
     a.click()
     URL.revokeObjectURL(a.href)
@@ -171,7 +219,7 @@ export default function App() {
         <div className="sidebar__counter">
           <span className="sidebar__count">
             {visibleSet.size}
-            <span className="sidebar__count-total"> / {images.length}</span>
+            <span className="sidebar__count-total"> / {allImages.length - hiddenCount}</span>
           </span>
           <span className="sidebar__count-label">images</span>
         </div>
@@ -229,6 +277,14 @@ export default function App() {
               style={{ display: 'none' }}
               onChange={handleFileSelect}
             />
+            {hiddenCount > 0 && (
+              <button
+                className={`show-hidden-btn${showHidden ? ' show-hidden-btn--active' : ''}`}
+                onClick={() => setShowHidden(v => !v)}
+              >
+                {showHidden ? 'Hide hidden' : `Show hidden (${hiddenCount})`}
+              </button>
+            )}
             {tagErrors.length > 0 && (
               <span className="toolbar__error">
                 {tagErrors.length} failed
@@ -236,7 +292,6 @@ export default function App() {
               </span>
             )}
           </div>
-
           <div className="toolbar__right">
             <button
               className="export-btn"
@@ -248,7 +303,16 @@ export default function App() {
           </div>
         </div>
 
-        <ImageGrid images={sortedImages} visibleSet={visibleSet} urlMap={urlMap} />
+        <ImageGrid
+          images={sortedImages}
+          visibleSet={visibleSet}
+          hiddenSet={hiddenImages}
+          showHidden={showHidden}
+          urlMap={urlMap}
+          onHide={handleHide}
+          onUnhide={handleUnhide}
+          onDelete={handleDelete}
+        />
       </main>
     </div>
   )

@@ -250,6 +250,32 @@ body {
   cursor: default;
 }
 
+/* Show hidden button */
+.show-hidden-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 6px 13px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.show-hidden-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.show-hidden-btn--active {
+  border-color: var(--text);
+  color: var(--text);
+  background: rgba(0,0,0,0.05);
+}
+
 .toolbar__error {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
