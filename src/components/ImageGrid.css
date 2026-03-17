@@ -1,11 +1,12 @@
 .image-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-  align-items: start;
+  columns: 4 240px;
+  column-gap: 12px;
+  padding: 0;
 }
 
 .image-grid__item {
+  break-inside: avoid;
+  margin-bottom: 12px;
   position: relative;
   overflow: hidden;
   border-radius: 3px;

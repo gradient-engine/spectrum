@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import './ImageGrid.css'
 
 const EASE_OUT = [0.25, 0.46, 0.45, 0.94]
@@ -19,8 +19,7 @@ export default function ImageGrid({ images, visibleSet, urlMap = {} }) {
 
   return (
     <>
-      <LayoutGroup>
-        <motion.div className="image-grid" layout>
+      <div className="image-grid">
           {images.map(filename => {
             const isVisible = visibleSet.has(filename)
             const src = urlMap[filename] || `/images/${filename}`
@@ -28,8 +27,6 @@ export default function ImageGrid({ images, visibleSet, urlMap = {} }) {
             return (
               <motion.div
                 key={filename}
-                layout
-                layoutId={filename}
                 initial={{ opacity: 0, scale: 0.92 }}
                 animate={
                   isVisible
@@ -66,8 +63,7 @@ export default function ImageGrid({ images, visibleSet, urlMap = {} }) {
               </motion.div>
             )
           })}
-        </motion.div>
-      </LayoutGroup>
+      </div>
 
       <AnimatePresence>
         {lightbox && (
