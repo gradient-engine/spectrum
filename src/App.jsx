@@ -50,10 +50,6 @@ export default function App() {
   const [values, setValues] = useState(DEFAULT_VALUES)
 
   const images = useMemo(() => Object.keys(metadata), [])
-  const allImages = useMemo(() => {
-    // If metadata is empty, we have no images to show
-    return images
-  }, [images])
 
   const activeCount = useMemo(
     () => ALL_KEYS.filter(k => values[k] !== 0).length,
@@ -62,13 +58,21 @@ export default function App() {
 
   const visibleSet = useMemo(() => {
     const visible = new Set()
-    for (const filename of allImages) {
+    for (const filename of images) {
       const meta = metadata[filename] || {}
       const show = ALL_KEYS.every(key => passes(meta[key] ?? 0, values[key]))
       if (show) visible.add(filename)
     }
     return visible
-  }, [allImages, values])
+  }, [images, values])
+
+  const sortedImages = useMemo(() => {
+    return [...images].sort((a, b) => {
+      const aVisible = visibleSet.has(a) ? 0 : 1
+      const bVisible = visibleSet.has(b) ? 0 : 1
+      return aVisible - bVisible
+    })
+  }, [images, visibleSet])
 
   function handleChange(key, val) {
     setValues(prev => ({ ...prev, [key]: val }))
@@ -91,7 +95,7 @@ export default function App() {
         <div className="sidebar__counter">
           <span className="sidebar__count">
             {visibleSet.size}
-            <span className="sidebar__count-total"> / {allImages.length}</span>
+            <span className="sidebar__count-total"> / {images.length}</span>
           </span>
           <span className="sidebar__count-label">images</span>
         </div>
@@ -130,7 +134,7 @@ export default function App() {
       </aside>
 
       <main className="main">
-        <ImageGrid images={allImages} visibleSet={visibleSet} />
+        <ImageGrid images={sortedImages} visibleSet={visibleSet} />
       </main>
     </div>
   )
