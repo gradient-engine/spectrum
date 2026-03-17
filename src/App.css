@@ -82,9 +82,35 @@ body {
   margin-top: 2px;
   opacity: 0.8;
   transition: opacity 0.15s ease;
+  position: relative;
 }
 
 .signout-btn:hover { opacity: 1; }
+
+.signout-btn::after {
+  content: 'Sign out';
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #111;
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.signout-btn:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .signout-btn__avatar {
   width: 28px;

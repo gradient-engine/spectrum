@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import './Auth.css'
 
@@ -12,6 +13,81 @@ function GoogleIcon() {
   )
 }
 
+function ParticleCanvas() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    let animId
+
+    const resize = () => {
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const COUNT = 55
+    const dots = Array.from({ length: COUNT }, () => ({
+      x:          Math.random() * window.innerWidth,
+      y:          Math.random() * window.innerHeight,
+      r:          Math.random() * 1.4 + 0.4,
+      angle:      Math.random() * Math.PI * 2,
+      speed:      Math.random() * 0.22 + 0.08,
+      turnSpeed:  (Math.random() - 0.5) * 0.012,
+    }))
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      dots.forEach(d => {
+        d.angle += d.turnSpeed
+        d.x += Math.cos(d.angle) * d.speed
+        d.y += Math.sin(d.angle) * d.speed
+
+        if (d.x < -10)              d.x = canvas.width  + 10
+        if (d.x > canvas.width + 10) d.x = -10
+        if (d.y < -10)              d.y = canvas.height + 10
+        if (d.y > canvas.height + 10) d.y = -10
+
+        ctx.beginPath()
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(0,0,0,0.09)'
+        ctx.fill()
+      })
+
+      // Soft connection lines between nearby dots
+      for (let i = 0; i < dots.length; i++) {
+        for (let j = i + 1; j < dots.length; j++) {
+          const dx   = dots[i].x - dots[j].x
+          const dy   = dots[i].y - dots[j].y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < 110) {
+            ctx.beginPath()
+            ctx.moveTo(dots[i].x, dots[i].y)
+            ctx.lineTo(dots[j].x, dots[j].y)
+            ctx.strokeStyle = `rgba(0,0,0,${0.05 * (1 - dist / 110)})`
+            ctx.lineWidth = 0.5
+            ctx.stroke()
+          }
+        }
+      }
+
+      animId = requestAnimationFrame(draw)
+    }
+
+    draw()
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  return <canvas ref={canvasRef} className="auth__canvas" />
+}
+
 export default function Auth() {
   async function handleGoogleSignIn() {
     await supabase.auth.signInWithOAuth({
@@ -22,6 +98,7 @@ export default function Auth() {
 
   return (
     <div className="auth">
+      <ParticleCanvas />
       <div className="auth__card">
         <div className="auth__logo">
           <div className="auth__title">Spectrum</div>
