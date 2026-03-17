@@ -9,16 +9,21 @@
   margin-bottom: 12px;
   position: relative;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 10px;
   cursor: pointer;
   will-change: transform, opacity, filter;
   pointer-events: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+.image-grid__item img {
+  border-radius: 10px;
 }
 
 .image-grid__item img {
   width: 100%;
   display: block;
-  border-radius: 3px;
+  border-radius: 10px;
 }
 
 /* Name overlay on hover */

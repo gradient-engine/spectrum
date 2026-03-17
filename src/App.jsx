@@ -224,12 +224,10 @@ export default function App() {
           <span className="sidebar__count-label">images</span>
         </div>
 
-        {isFiltering && (
-          <div className="sidebar__active-bar">
-            <span>{activeCount} dimension{activeCount !== 1 ? 's' : ''} active</span>
-            <button className="reset-btn" onClick={handleReset}>Reset all</button>
-          </div>
-        )}
+        <div className={`sidebar__active-bar${isFiltering ? '' : ' sidebar__active-bar--hidden'}`}>
+          <span>{activeCount} dimension{activeCount !== 1 ? 's' : ''} active</span>
+          <button className="reset-btn" onClick={handleReset}>Reset all</button>
+        </div>
 
         <div className="sidebar__sliders">
           {SPECTRUMS.map(({ group, items }) => (
