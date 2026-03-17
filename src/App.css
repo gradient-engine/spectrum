@@ -93,25 +93,27 @@ body {
 
 .sidebar__count {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 28px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: var(--text);
   line-height: 1;
 }
 
 .sidebar__count-total {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--muted);
 }
 
 .sidebar__count-label {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 10px;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: lowercase;
 }
 
 /* Active bar — always occupies space, just hidden when inactive */
