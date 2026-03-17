@@ -1,0 +1,120 @@
+.image-grid {
+  columns: 4 240px;
+  column-gap: 12px;
+  padding: 0;
+}
+
+.image-grid__item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
+}
+
+.image-grid__item img {
+  width: 100%;
+  display: block;
+  border-radius: 3px;
+}
+
+.image-grid__item--visible {
+  opacity: 1;
+  transform: scale(1);
+  filter: none;
+  pointer-events: auto;
+}
+
+.image-grid__item--hidden {
+  opacity: 0.08;
+  transform: scale(0.97);
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
+.image-grid__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+}
+
+.image-grid__item--visible:hover .image-grid__overlay {
+  opacity: 1;
+}
+
+.image-grid__name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: white;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Empty state */
+.image-grid__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #999;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+.image-grid__empty code {
+  background: #ECEAE5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 40px;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.lightbox__close:hover {
+  opacity: 1;
+}
