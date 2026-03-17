@@ -1,21 +1,16 @@
 .image-grid {
-  columns: 4 240px;
-  column-gap: 12px;
-  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
 }
 
 .image-grid__item {
-  break-inside: avoid;
-  margin-bottom: 12px;
   position: relative;
   overflow: hidden;
   border-radius: 3px;
   cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
-}
-
-.image-grid__item--hidden {
-  transition: opacity 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+  will-change: transform, opacity, filter;
 }
 
 .image-grid__item img {
@@ -25,16 +20,10 @@
 }
 
 .image-grid__item--visible {
-  opacity: 1;
-  transform: scale(1);
-  filter: none;
   pointer-events: auto;
 }
 
 .image-grid__item--hidden {
-  opacity: 0.08;
-  transform: scale(0.97);
-  filter: grayscale(1);
   pointer-events: none;
 }
 
@@ -75,6 +64,11 @@
   font-size: 13px;
   text-align: center;
   line-height: 1.8;
+}
+
+.image-grid__empty strong {
+  color: #555;
+  font-weight: 500;
 }
 
 .image-grid__empty code {
