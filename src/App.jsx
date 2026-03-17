@@ -7,21 +7,21 @@ import './App.css'
 
 const SPECTRUMS = [
   {
-    group: 'VISUAL EXPRESSION',
+    group: 'Visual Expression',
     items: [
       { key: 'minimal_decorative',        left: 'Minimal',      right: 'Decorative'    },
       { key: 'bold_subtle',               left: 'Bold',         right: 'Subtle'        },
     ],
   },
   {
-    group: 'PERSONALITY',
+    group: 'Personality',
     items: [
       { key: 'playful_formal',            left: 'Playful',      right: 'Formal'        },
       { key: 'emotional_rational',        left: 'Emotional',    right: 'Rational'      },
     ],
   },
   {
-    group: 'CULTURAL POSITION',
+    group: 'Cultural Position',
     items: [
       { key: 'approachable_aspirational', left: 'Approachable', right: 'Aspirational'  },
       { key: 'rebellion_authority',       left: 'Rebellion',    right: 'Authority'     },
@@ -29,7 +29,7 @@ const SPECTRUMS = [
     ],
   },
   {
-    group: 'STRATEGIC ORIENTATION',
+    group: 'Strategic Orientation',
     items: [
       { key: 'innovation_craft',          left: 'Innovation',   right: 'Craft'         },
       { key: 'broad_focused',             left: 'Broad',        right: 'Focused'       },
