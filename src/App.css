@@ -94,7 +94,7 @@ body {
 .sidebar__count {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 28px;
-  font-weight: 300;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text);
   line-height: 1;
