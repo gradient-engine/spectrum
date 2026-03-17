@@ -70,7 +70,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setAuthLoading(false)
-    })
+    }).catch(() => setAuthLoading(false))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session)
       if (!session) {
@@ -283,8 +283,14 @@ export default function App() {
   }
 
   // ── Render ────────────────────────────────────────────────
-  if (authLoading) return null
-  if (!session)    return <Auth />
+  if (authLoading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center',
+      minHeight:'100vh', background:'#EDECE8', fontFamily:'IBM Plex Mono, monospace',
+      fontSize:'11px', color:'#aaa', letterSpacing:'0.06em' }}>
+      Loading…
+    </div>
+  )
+  if (!session) return <Auth />
 
   const isFiltering = activeCount > 0
   const isTagging   = tagging.length > 0
