@@ -68,7 +68,7 @@ body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: -0.02em;
   color: var(--text);
 }
 
@@ -92,7 +92,7 @@ body {
 }
 
 .sidebar__count {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 28px;
   font-weight: 300;
   letter-spacing: -0.02em;
@@ -101,12 +101,13 @@ body {
 }
 
 .sidebar__count-total {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 16px;
   color: var(--muted);
 }
 
 .sidebar__count-label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 10px;
   color: var(--muted);
   letter-spacing: 0.08em;
@@ -167,7 +168,7 @@ body {
 
 .slider-group__label {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: #555;

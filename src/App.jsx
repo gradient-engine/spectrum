@@ -212,7 +212,7 @@ export default function App() {
     <div className="app">
       <aside className="sidebar">
         <header className="sidebar__header">
-          <div className="sidebar__title">SPECTRUM</div>
+          <div className="sidebar__title">Spectrum</div>
           <div className="sidebar__sub">Brand Personality Filter</div>
         </header>
 
