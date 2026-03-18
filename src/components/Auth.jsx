@@ -30,12 +30,12 @@ function ParticleCanvas() {
 
     const COUNT = 55
     const dots = Array.from({ length: COUNT }, () => ({
-      x:          Math.random() * canvas.offsetWidth,
-      y:          Math.random() * canvas.offsetHeight,
-      r:          Math.random() * 1.4 + 0.4,
-      angle:      Math.random() * Math.PI * 2,
-      speed:      Math.random() * 0.22 + 0.08,
-      turnSpeed:  (Math.random() - 0.5) * 0.012,
+      x:         Math.random() * canvas.offsetWidth,
+      y:         Math.random() * canvas.offsetHeight,
+      r:         Math.random() * 1.4 + 0.4,
+      angle:     Math.random() * Math.PI * 2,
+      speed:     Math.random() * 0.22 + 0.08,
+      turnSpeed: (Math.random() - 0.5) * 0.012,
     }))
 
     function draw() {
@@ -46,9 +46,9 @@ function ParticleCanvas() {
         d.x += Math.cos(d.angle) * d.speed
         d.y += Math.sin(d.angle) * d.speed
 
-        if (d.x < -10)              d.x = canvas.width  + 10
-        if (d.x > canvas.width + 10) d.x = -10
-        if (d.y < -10)              d.y = canvas.height + 10
+        if (d.x < -10)               d.x = canvas.width  + 10
+        if (d.x > canvas.width  + 10) d.x = -10
+        if (d.y < -10)               d.y = canvas.height + 10
         if (d.y > canvas.height + 10) d.y = -10
 
         ctx.beginPath()
@@ -57,7 +57,6 @@ function ParticleCanvas() {
         ctx.fill()
       })
 
-      // Soft connection lines between nearby dots
       for (let i = 0; i < dots.length; i++) {
         for (let j = i + 1; j < dots.length; j++) {
           const dx   = dots[i].x - dots[j].x
@@ -67,7 +66,7 @@ function ParticleCanvas() {
             ctx.beginPath()
             ctx.moveTo(dots[i].x, dots[i].y)
             ctx.lineTo(dots[j].x, dots[j].y)
-            ctx.strokeStyle = `rgba(255,255,255,${0.1 * (1 - dist / 110)})`
+            ctx.strokeStyle = `rgba(255,255,255,${0.10 * (1 - dist / 110)})`
             ctx.lineWidth = 0.5
             ctx.stroke()
           }
@@ -88,7 +87,7 @@ function ParticleCanvas() {
   return <canvas ref={canvasRef} className="auth__canvas" />
 }
 
-export default function Auth() {
+export default function Auth({ onGuest }) {
   async function handleGoogleSignIn() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -97,7 +96,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="auth">
+    <div className="auth-overlay">
       <ParticleCanvas />
       <div className="auth__card">
         <div className="auth__logo">
@@ -111,6 +110,11 @@ export default function Auth() {
           <GoogleIcon />
           Continue with Google
         </button>
+        {onGuest && (
+          <button className="auth__guest-btn" onClick={onGuest}>
+            Explore first, sign in later
+          </button>
+        )}
       </div>
     </div>
   )

@@ -63,16 +63,55 @@ function getPublicUrl(path) {
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
+function MoonIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  )
+}
+
+function SunIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1"  x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1"  y1="12" x2="3"  y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36"/>
+      <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+    </svg>
+  )
+}
+
 export default function App() {
+  // ── Dark mode ─────────────────────────────────────────────
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('spectrum-dark') === 'true'
+    document.documentElement.dataset.theme = stored ? 'dark' : 'light'
+    return stored
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
+    localStorage.setItem('spectrum-dark', darkMode)
+  }, [darkMode])
+
   // ── Auth ─────────────────────────────────────────────────
-  const [session,     setSession]     = useState(null)
-  const [authLoading, setAuthLoading] = useState(true)
+  const [session,          setSession]          = useState(null)
+  const [authLoading,      setAuthLoading]      = useState(true)
+  const [showAuthOverlay,  setShowAuthOverlay]  = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setAuthLoading(false)
-    }).catch(() => setAuthLoading(false))
+      if (!session) setShowAuthOverlay(true)
+    }).catch(() => { setAuthLoading(false); setShowAuthOverlay(true) })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session)
       if (!session) {
@@ -81,6 +120,9 @@ export default function App() {
         setDeletedStatic(new Set())
         setCollection(null)
         setOnlineUsers([])
+        setShowAuthOverlay(true)
+      } else {
+        setShowAuthOverlay(false)
       }
     })
     return () => subscription.unsubscribe()
@@ -92,7 +134,6 @@ export default function App() {
   const [onlineUsers, setOnlineUsers] = useState([])
   const [copied,      setCopied]      = useState(false)
 
-  // Presence channel — connect when collection is loaded
   useEffect(() => {
     if (!collection || !session) return
 
@@ -150,13 +191,11 @@ export default function App() {
   async function loadUserData() {
     setDataLoading(true)
 
-    // Handle invite link
     const joinCode = new URLSearchParams(window.location.search).get('join')
     if (joinCode) {
       await joinCollectionByCode(joinCode)
     }
 
-    // Find user's collection membership
     const { data: membership } = await supabase
       .from('collection_members')
       .select('collection_id, collections(*)')
@@ -173,7 +212,6 @@ export default function App() {
     const col = membership.collections
     setCollection(col)
 
-    // Load images + prefs in parallel
     const [{ data: imgs }, { data: prefs }] = await Promise.all([
       supabase.from('images')
         .select('*')
@@ -309,6 +347,12 @@ export default function App() {
     }
   }
 
+  function handleUploadClick() {
+    if (!session) { setShowAuthOverlay(true); return }
+    if (!collection) return
+    fileInputRef.current?.click()
+  }
+
   async function handleFileSelect(e) {
     const files = Array.from(e.target.files)
     e.target.value = ''
@@ -379,20 +423,27 @@ export default function App() {
   // ── Render ────────────────────────────────────────────────
   if (authLoading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center',
-      minHeight:'100vh', background:'#EDECE8', fontFamily:'IBM Plex Mono, monospace',
+      minHeight:'100vh', background: darkMode ? '#111' : '#EDECE8',
+      fontFamily:'IBM Plex Mono, monospace',
       fontSize:'11px', color:'#aaa', letterSpacing:'0.06em' }}>
       Loading…
     </div>
   )
-  if (!session)  return <Auth />
-  if (showSetup) return <CollectionSetup session={session} onDone={handleCollectionCreated} />
+
+  if (showSetup && session) return (
+    <CollectionSetup session={session} onDone={handleCollectionCreated} />
+  )
 
   const isFiltering = activeCount > 0
   const isTagging   = tagging.length > 0
-  const user        = session.user
+  const user        = session?.user
 
   return (
     <div className="app">
+      {showAuthOverlay && (
+        <Auth onGuest={() => setShowAuthOverlay(false)} />
+      )}
+
       <aside className="sidebar">
         <header className="sidebar__header">
           <div className="sidebar__header-top">
@@ -400,14 +451,29 @@ export default function App() {
               <div className="sidebar__title">Spectrum</div>
               <div className="sidebar__sub">Brand Personality Filter</div>
             </div>
-            <button className="signout-btn" onClick={() => supabase.auth.signOut()} title="Sign out">
-              {user.user_metadata?.avatar_url
-                ? <img src={user.user_metadata.avatar_url} alt="" className="signout-btn__avatar" />
-                : <span className="signout-btn__initial">
-                    {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
-                  </span>
-              }
-            </button>
+            <div className="sidebar__header-actions">
+              <button
+                className="dark-toggle"
+                onClick={() => setDarkMode(v => !v)}
+                title={darkMode ? 'Light mode' : 'Dark mode'}
+              >
+                {darkMode ? <SunIcon /> : <MoonIcon />}
+              </button>
+              {user ? (
+                <button className="signout-btn" onClick={() => supabase.auth.signOut()} title="Sign out">
+                  {user.user_metadata?.avatar_url
+                    ? <img src={user.user_metadata.avatar_url} alt="" className="signout-btn__avatar" />
+                    : <span className="signout-btn__initial">
+                        {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
+                      </span>
+                  }
+                </button>
+              ) : (
+                <button className="signin-pill" onClick={() => setShowAuthOverlay(true)}>
+                  Sign in
+                </button>
+              )}
+            </div>
           </div>
           {collection && (
             <div className="sidebar__collection-name">{collection.name}</div>
@@ -454,7 +520,7 @@ export default function App() {
               <div className="toolbar__left">
                 <button
                   className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={handleUploadClick}
                   disabled={isTagging}
                 >
                   {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}

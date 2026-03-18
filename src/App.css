@@ -18,6 +18,17 @@
   --shadow:         0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
 }
 
+[data-theme="dark"] {
+  --bg:           #111111;
+  --sidebar-bg:   #1C1C1C;
+  --card-bg:      #1C1C1C;
+  --border:       #2C2C2C;
+  --border-light: #242424;
+  --text:         #F0F0EC;
+  --muted:        #555555;
+  --shadow:       0 2px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3);
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -69,6 +80,53 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+}
+
+/* Sidebar header actions row */
+.sidebar__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+/* Dark mode toggle */
+.dark-toggle {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.dark-toggle:hover {
+  color: var(--text);
+  background: var(--border);
+}
+
+/* Sign-in pill for guests */
+.signin-pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px 10px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.signin-pill:hover {
+  background: var(--border);
 }
 
 /* Avatar / sign-out button */
@@ -151,7 +209,10 @@ body {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .sidebar__sub {
@@ -425,3 +486,22 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── Dark mode overrides ─────────────────────────────────────── */
+[data-theme="dark"] .brand-slider__track       { background: #333; }
+[data-theme="dark"] .brand-slider__center-tick  { background: #444; }
+[data-theme="dark"] .brand-slider__fill         { background: var(--text); }
+[data-theme="dark"] .brand-slider__tick         { background: #333; }
+[data-theme="dark"] .brand-slider__tick--center { background: #444; }
+[data-theme="dark"] .brand-slider__tick--active { background: var(--text); }
+[data-theme="dark"] .brand-slider__label--active { color: var(--text); }
+
+[data-theme="dark"] .brand-slider__input::-webkit-slider-thumb { background: var(--text); }
+[data-theme="dark"] .brand-slider__input:active::-webkit-slider-thumb { background: #ccc; }
+[data-theme="dark"] .brand-slider__input::-moz-range-thumb { background: var(--text); }
+
+[data-theme="dark"] .image-grid__empty          { color: #444; }
+[data-theme="dark"] .image-grid__empty strong   { color: #666; }
+[data-theme="dark"] .image-grid__empty code     { background: #2a2a2a; color: var(--text); }
+
+[data-theme="dark"] .share-btn:hover { background: #444; }
