@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import BrandSlider      from './components/BrandSlider'
 import ImageGrid        from './components/ImageGrid'
+import BrandMap         from './components/BrandMap'
 import Auth             from './components/Auth'
 import CollectionSetup  from './components/CollectionSetup'
 import PresenceAvatars  from './components/PresenceAvatars'
@@ -253,6 +255,7 @@ export default function App() {
   const [tagging,    setTagging]    = useState([])
   const [tagErrors,  setTagErrors]  = useState([])
   const [showHidden, setShowHidden] = useState(false)
+  const [viewMode,   setViewMode]   = useState('grid')
   const fileInputRef = useRef(null)
 
   // ── Derived ───────────────────────────────────────────────
@@ -306,6 +309,17 @@ export default function App() {
   const hiddenCount = useMemo(
     () => allImages.filter(f => hiddenImages.has(f)).length, [allImages, hiddenImages]
   )
+
+  const boardPosition = useMemo(() => {
+    const visible = [...visibleSet]
+    if (!visible.length) return null
+    const result = {}
+    ALL_KEYS.forEach(k => {
+      const vals = visible.map(f => (allMeta[f] ?? {})[k] ?? 0)
+      result[k] = vals.reduce((a, b) => a + b, 0) / vals.length
+    })
+    return result
+  }, [visibleSet, allMeta])
 
   // ── Actions ───────────────────────────────────────────────
   function handleChange(key, val) { setValues(prev => ({ ...prev, [key]: val })) }
@@ -542,6 +556,20 @@ export default function App() {
                   </span>
                 )}
               </div>
+
+              <div className="toolbar__center">
+                <div className="view-toggle">
+                  <button
+                    className={`view-toggle__btn${viewMode === 'grid' ? ' view-toggle__btn--active' : ''}`}
+                    onClick={() => setViewMode('grid')}
+                  >Grid</button>
+                  <button
+                    className={`view-toggle__btn${viewMode === 'map' ? ' view-toggle__btn--active' : ''}`}
+                    onClick={() => setViewMode('map')}
+                  >Map</button>
+                </div>
+              </div>
+
               <div className="toolbar__right">
                 <PresenceAvatars users={onlineUsers} />
                 {collection && (
@@ -555,16 +583,32 @@ export default function App() {
               </div>
             </div>
 
-            <ImageGrid
-              images={sortedImages}
-              visibleSet={visibleSet}
-              hiddenSet={hiddenImages}
-              showHidden={showHidden}
-              urlMap={urlMap}
-              onHide={handleHide}
-              onUnhide={handleUnhide}
-              onDelete={handleDelete}
-            />
+            <AnimatePresence mode="wait">
+              {viewMode === 'grid' ? (
+                <motion.div key="grid" className="view-panel"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <ImageGrid
+                    images={sortedImages}
+                    visibleSet={visibleSet}
+                    hiddenSet={hiddenImages}
+                    showHidden={showHidden}
+                    urlMap={urlMap}
+                    onHide={handleHide}
+                    onUnhide={handleUnhide}
+                    onDelete={handleDelete}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div key="map" className="view-panel"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <BrandMap boardPosition={boardPosition} spectrums={SPECTRUMS} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
       </main>

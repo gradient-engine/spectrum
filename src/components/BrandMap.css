@@ -1,0 +1,139 @@
+.brand-map {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 28px 28px;
+  box-sizing: border-box;
+}
+
+/* Lens selector */
+.brand-map__lenses {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.brand-map__lens {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 150ms ease;
+  letter-spacing: 0.01em;
+}
+
+.brand-map__lens:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.brand-map__lens--active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* SVG wrapper */
+.brand-map__wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-map__svg {
+  width: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+
+/* Plot area */
+.brand-map__bg {
+  fill: var(--card-bg);
+}
+
+/* Grid lines */
+.brand-map__grid {
+  stroke: var(--border);
+  stroke-width: 0.5;
+}
+
+.brand-map__axis {
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+
+/* Axis edge labels */
+.brand-map__edge-label {
+  fill: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.03em;
+}
+
+/* Brand dots */
+.brand-map__brand {
+  cursor: default;
+}
+
+.brand-map__brand-dot {
+  fill: var(--muted);
+  opacity: 0.45;
+  transition: opacity 150ms;
+}
+
+.brand-map__brand:hover .brand-map__brand-dot {
+  opacity: 0.9;
+}
+
+.brand-map__brand-name {
+  fill: var(--muted);
+  font-size: 9px;
+  font-family: inherit;
+  font-weight: 500;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 150ms;
+}
+
+.brand-map__brand:hover .brand-map__brand-name {
+  opacity: 1;
+}
+
+/* Your board marker */
+.brand-map__board-ring {
+  fill: none;
+  stroke: #F59E0B;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+}
+
+.brand-map__board-dot {
+  fill: #F59E0B;
+}
+
+.brand-map__board-label {
+  fill: #F59E0B;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+
+/* Empty state */
+.brand-map__empty {
+  fill: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  opacity: 0.5;
+}
