@@ -2,11 +2,11 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 20px 28px 28px;
+  padding: 4px 0 0;
   box-sizing: border-box;
 }
 
-/* Lens selector */
+/* ── Lens selector ───────────────────────────────────────── */
 .brand-map__lenses {
   display: flex;
   gap: 6px;
@@ -16,14 +16,14 @@
 }
 
 .brand-map__lens {
-  padding: 6px 14px;
+  padding: 5px 14px;
   border-radius: 20px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 12px;
   font-weight: 500;
-  font-family: inherit;
   cursor: pointer;
   transition: all 150ms ease;
   letter-spacing: 0.01em;
@@ -40,68 +40,63 @@
   border-color: var(--text);
 }
 
-/* SVG wrapper */
+/* ── SVG wrapper ─────────────────────────────────────────── */
 .brand-map__wrap {
   flex: 1;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .brand-map__svg {
   width: 100%;
-  max-height: 100%;
+  height: 100%;
   overflow: visible;
 }
 
-/* Plot area */
-.brand-map__bg {
-  fill: var(--card-bg);
+/* ── Dot grid ────────────────────────────────────────────── */
+.brand-map__dot-fill {
+  fill: var(--muted);
+  opacity: 0.2;
 }
 
-/* Grid lines */
-.brand-map__grid {
-  stroke: var(--border);
-  stroke-width: 0.5;
-}
-
+/* ── Center axes ─────────────────────────────────────────── */
 .brand-map__axis {
   stroke: var(--muted);
   stroke-width: 1;
-  opacity: 0.4;
+  opacity: 0.25;
+  stroke-dasharray: 4 4;
 }
 
-/* Axis edge labels */
+/* ── Axis edge labels ────────────────────────────────────── */
 .brand-map__edge-label {
   fill: var(--muted);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 11px;
-  font-weight: 500;
-  font-family: inherit;
-  letter-spacing: 0.03em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-/* Brand dots */
+/* ── Brand dots ──────────────────────────────────────────── */
 .brand-map__brand {
   cursor: default;
 }
 
 .brand-map__brand-dot {
-  fill: var(--muted);
-  opacity: 0.45;
+  fill: var(--text);
+  opacity: 0.3;
   transition: opacity 150ms;
 }
 
 .brand-map__brand:hover .brand-map__brand-dot {
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 .brand-map__brand-name {
-  fill: var(--muted);
+  fill: var(--text);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 9px;
-  font-family: inherit;
-  font-weight: 500;
-  opacity: 0.6;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.45;
   pointer-events: none;
   transition: opacity 150ms;
 }
@@ -110,12 +105,12 @@
   opacity: 1;
 }
 
-/* Your board marker */
+/* ── Your board marker ───────────────────────────────────── */
 .brand-map__board-ring {
   fill: none;
   stroke: #F59E0B;
   stroke-width: 2;
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.35));
 }
 
 .brand-map__board-dot {
@@ -124,16 +119,17 @@
 
 .brand-map__board-label {
   fill: #F59E0B;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 10px;
   font-weight: 600;
-  font-family: inherit;
   letter-spacing: 0.02em;
 }
 
-/* Empty state */
+/* ── Empty state ─────────────────────────────────────────── */
 .brand-map__empty {
   fill: var(--muted);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13px;
-  font-family: inherit;
+  font-weight: 500;
   opacity: 0.5;
 }
