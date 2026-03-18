@@ -593,7 +593,7 @@ export default function App() {
               </div>
 
               <div className="toolbar__right">
-                <PresenceAvatars users={onlineUsers} />
+                <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
                 {collection && (
                   <button className="share-btn" onClick={handleShare}>
                     {copied ? 'Copied!' : 'Share'}

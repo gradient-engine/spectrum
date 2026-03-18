@@ -45,6 +45,23 @@
   color: var(--text);
 }
 
+/* Current user — slightly muted */
+.presence__avatar--you {
+  opacity: 0.45;
+}
+
+/* Green live dot on other users' avatars */
+.presence__live {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 1.5px solid var(--bg);
+}
+
 .presence__avatar--overflow {
   background: var(--border);
 }
