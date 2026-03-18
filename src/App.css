@@ -209,10 +209,7 @@ body {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text);
 }
 
 .sidebar__sub {
@@ -280,21 +277,32 @@ body {
 }
 
 .reset-btn {
-  background: none;
-  border: 1px solid var(--border);
+  background: rgba(202, 138, 4, 0.10);
+  border: 1px solid rgba(202, 138, 4, 0.35);
   border-radius: 100px;
   padding: 3px 10px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text);
+  color: #92660a;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .reset-btn:hover {
-  background: var(--border);
+  background: rgba(202, 138, 4, 0.18);
+  border-color: rgba(202, 138, 4, 0.55);
+}
+
+[data-theme="dark"] .reset-btn {
+  background: rgba(202, 138, 4, 0.12);
+  border-color: rgba(202, 138, 4, 0.3);
+  color: #d4a017;
+}
+
+[data-theme="dark"] .reset-btn:hover {
+  background: rgba(202, 138, 4, 0.22);
 }
 
 /* Sliders */
@@ -309,6 +317,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.sidebar__sliders > .slider-group:first-child {
+  margin-top: 10px;
 }
 
 .slider-group__label {
@@ -479,7 +491,7 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: #a855f7;
   text-transform: uppercase;
   margin-top: 10px;
   white-space: nowrap;
@@ -504,4 +516,14 @@ body {
 [data-theme="dark"] .image-grid__empty strong   { color: #666; }
 [data-theme="dark"] .image-grid__empty code     { background: #2a2a2a; color: var(--text); }
 
-[data-theme="dark"] .share-btn:hover { background: #444; }
+/* Upload + Share: dark bg in light mode, need dark text in dark mode */
+[data-theme="dark"] .upload-btn {
+  color: #111;
+}
+[data-theme="dark"] .upload-btn:hover:not(:disabled) {
+  background: #ddd;
+}
+[data-theme="dark"] .share-btn {
+  color: #111;
+}
+[data-theme="dark"] .share-btn:hover { background: #ccc; }

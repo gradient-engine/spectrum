@@ -64,39 +64,43 @@ export default function ImageGrid({
           const src              = urlMap[filename] || `/images/${filename}`
 
           return (
-            <motion.div
-              key={filename}
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={
-                dimmed
-                  ? {
-                      opacity: 0.07, scale: 0.97, filter: 'grayscale(100%)',
-                      transition: {
-                        opacity: { duration: 0.35, ease: EASE_IN },
-                        scale:   { duration: 0.35, ease: EASE_IN },
-                        filter:  { duration: 0.35, ease: EASE_IN },
-                      },
-                    }
-                  : {
-                      opacity: 1, scale: 1, filter: 'grayscale(0%)',
-                      transition: {
-                        opacity: { duration: 0.45, ease: EASE_OUT },
-                        scale:   { duration: 0.45, ease: EASE_OUT },
-                        filter:  { duration: 0.45, ease: EASE_OUT },
-                      },
-                    }
-              }
-              className={`image-grid__item${dimmed ? ' image-grid__item--dimmed' : ''}`}
-              onClick={() => !dimmed && setLightbox(filename)}
-            >
-              <img src={src} alt={filename} loading="lazy" />
+            // Wrapper holds position context + break-inside for masonry
+            // Actions live here so they are NOT affected by the motion.div opacity
+            <div key={filename} className="image-grid__wrapper">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={
+                  dimmed
+                    ? {
+                        opacity: 0.08, scale: 0.97, filter: 'grayscale(100%)',
+                        transition: {
+                          opacity: { duration: 0.35, ease: EASE_IN },
+                          scale:   { duration: 0.35, ease: EASE_IN },
+                          filter:  { duration: 0.35, ease: EASE_IN },
+                        },
+                      }
+                    : {
+                        opacity: 1, scale: 1, filter: 'grayscale(0%)',
+                        transition: {
+                          opacity: { duration: 0.45, ease: EASE_OUT },
+                          scale:   { duration: 0.45, ease: EASE_OUT },
+                          filter:  { duration: 0.45, ease: EASE_OUT },
+                        },
+                      }
+                }
+                className={`image-grid__item${dimmed ? ' image-grid__item--dimmed' : ''}`}
+                onClick={() => !dimmed && setLightbox(filename)}
+              >
+                <img src={src} alt={filename} loading="lazy" />
 
-              {!dimmed && (
-                <div className="image-grid__overlay">
-                  <span className="image-grid__name">{filename}</span>
-                </div>
-              )}
+                {!dimmed && (
+                  <div className="image-grid__overlay">
+                    <span className="image-grid__name">{filename}</span>
+                  </div>
+                )}
+              </motion.div>
 
+              {/* Actions are siblings of motion.div — full opacity always */}
               <div className="image-grid__actions">
                 {isManuallyHidden ? (
                   <button
@@ -123,7 +127,7 @@ export default function ImageGrid({
                   <IconX />
                 </button>
               </div>
-            </motion.div>
+            </div>
           )
         })}
       </div>

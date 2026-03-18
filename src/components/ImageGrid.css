@@ -4,9 +4,14 @@
   padding: 0;
 }
 
-.image-grid__item {
+/* Wrapper owns the masonry break + margin + position context */
+.image-grid__wrapper {
   break-inside: avoid;
   margin-bottom: 12px;
+  position: relative;
+}
+
+.image-grid__item {
   position: relative;
   overflow: hidden;
   border-radius: 10px;
@@ -39,7 +44,7 @@
   pointer-events: none;
 }
 
-.image-grid__item:not(.image-grid__item--dimmed):hover .image-grid__overlay {
+.image-grid__wrapper:hover .image-grid__item:not(.image-grid__item--dimmed) .image-grid__overlay {
   opacity: 1;
 }
 
@@ -66,7 +71,7 @@
   z-index: 2;
 }
 
-.image-grid__item:hover .image-grid__actions {
+.image-grid__wrapper:hover .image-grid__actions {
   opacity: 1;
 }
 
