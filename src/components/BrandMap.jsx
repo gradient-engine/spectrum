@@ -10,15 +10,20 @@ const LENSES = [
   { id: 'trust',    name: 'Trust vs Edge',     x: 'playful_formal',            y: 'rebellion_authority'   },
 ]
 
-const W   = 760
-const H   = 460
-const PAD = { top: 48, right: 120, bottom: 48, left: 120 }
+const W   = 900
+const H   = 520
+const PAD = { top: 56, right: 130, bottom: 56, left: 130 }
 const PW  = W - PAD.left - PAD.right
 const PH  = H - PAD.top  - PAD.bottom
 
-const CHAR_W  = 5.2
-const LABEL_H = 10
-const GAP     = 4
+// SVG units — fonts appear ~1.4× larger at typical viewport
+const F_AXIS  = 7    // → ~10px visual (matches slider label)
+const F_BRAND = 8.5  // → ~12px visual (matches section header)
+const F_BOARD = 7    // → ~10px visual
+
+const CHAR_W  = F_BRAND * 0.58
+const LABEL_H = F_BRAND
+const GAP     = 5
 
 function toX(v) { return PAD.left + ((v + 3) / 6) * PW }
 function toY(v) { return PAD.top  + ((3 - v) / 6) * PH }
@@ -31,16 +36,16 @@ function layoutLabels(entries, lensX, lensY) {
     const lw = name.length * CHAR_W
 
     const candidates = [
-      { lx: dx + 8,       ly: dy + 4    },
-      { lx: dx + 8,       ly: dy - 8    },
-      { lx: dx + 8,       ly: dy + 16   },
-      { lx: dx - lw - 8,  ly: dy + 4    },
-      { lx: dx - lw - 8,  ly: dy - 8    },
-      { lx: dx - lw - 8,  ly: dy + 16   },
+      { lx: dx + 9,       ly: dy + 4    },
+      { lx: dx + 9,       ly: dy - 7    },
+      { lx: dx + 9,       ly: dy + 15   },
+      { lx: dx - lw - 9,  ly: dy + 4    },
+      { lx: dx - lw - 9,  ly: dy - 7    },
+      { lx: dx - lw - 9,  ly: dy + 15   },
       { lx: dx - lw / 2,  ly: dy - 14   },
-      { lx: dx - lw / 2,  ly: dy + 22   },
-      { lx: dx + 8,       ly: dy + 28   },
-      { lx: dx + 8,       ly: dy - 22   },
+      { lx: dx - lw / 2,  ly: dy + 20   },
+      { lx: dx + 9,       ly: dy + 26   },
+      { lx: dx + 9,       ly: dy - 20   },
     ]
 
     let chosen = candidates[0]
@@ -64,7 +69,7 @@ export default function BrandMap({ boardPosition, spectrums, lensId = 'market' }
   function getLabels(key) {
     for (const g of spectrums) {
       const item = g.items.find(i => i.key === key)
-      if (item) return { left: item.left, right: item.right }
+      if (item) return { left: item.left.toUpperCase(), right: item.right.toUpperCase() }
     }
     return { left: '', right: '' }
   }
@@ -86,40 +91,49 @@ export default function BrandMap({ boardPosition, spectrums, lensId = 'market' }
       <div className="brand-map__wrap">
         <svg viewBox={`0 0 ${W} ${H}`} className="brand-map__svg" preserveAspectRatio="xMidYMid meet">
 
-          {/* Center axes only */}
-          <line x1={toX(0)} y1={PAD.top - 16} x2={toX(0)} y2={PAD.top + PH + 16} className="brand-map__axis" />
-          <line x1={PAD.left - 16} y1={toY(0)} x2={PAD.left + PW + 16} y2={toY(0)} className="brand-map__axis" />
+          {/* Center axes — thin solid lines */}
+          <line x1={toX(0)} y1={PAD.top - 20} x2={toX(0)} y2={PAD.top + PH + 20} className="brand-map__axis" />
+          <line x1={PAD.left - 20} y1={toY(0)} x2={PAD.left + PW + 20} y2={toY(0)} className="brand-map__axis" />
 
-          {/* Axis labels — match slider label style */}
-          <text x={PAD.left + PW / 2} y={PAD.top - 24}       textAnchor="middle"            className="brand-map__edge-label">{yL.right}</text>
-          <text x={PAD.left + PW / 2} y={PAD.top + PH + 38}  textAnchor="middle"            className="brand-map__edge-label">{yL.left}</text>
-          <text x={PAD.left - 24}     y={PAD.top + PH / 2}   textAnchor="end"   dominantBaseline="middle" className="brand-map__edge-label">{xL.left}</text>
-          <text x={PAD.left + PW + 24} y={PAD.top + PH / 2}  textAnchor="start" dominantBaseline="middle" className="brand-map__edge-label">{xL.right}</text>
+          {/* Axis labels — IBM Plex Mono, uppercase, matches slider labels */}
+          <text x={PAD.left + PW / 2} y={PAD.top - 28}       textAnchor="middle"            fontSize={F_AXIS} className="brand-map__edge-label">{yL.right}</text>
+          <text x={PAD.left + PW / 2} y={PAD.top + PH + 40}  textAnchor="middle"            fontSize={F_AXIS} className="brand-map__edge-label">{yL.left}</text>
+          <text x={PAD.left - 26}     y={PAD.top + PH / 2}   textAnchor="end"   dominantBaseline="middle" fontSize={F_AXIS} className="brand-map__edge-label">{xL.left}</text>
+          <text x={PAD.left + PW + 26} y={PAD.top + PH / 2}  textAnchor="start" dominantBaseline="middle" fontSize={F_AXIS} className="brand-map__edge-label">{xL.right}</text>
 
-          {/* Brand dots + collision-avoided labels */}
+          {/* Brand dots + labels */}
           {labelPositions.map(({ name, dx, dy, lx, ly }) => (
             <g key={name} className="brand-map__brand">
-              <circle cx={dx} cy={dy} r={3.5} className="brand-map__brand-dot" />
-              <text x={lx} y={ly} className="brand-map__brand-name">{name}</text>
+              {/* Slider-thumb style dot */}
+              <circle cx={dx} cy={dy} r={4.5} className="brand-map__brand-dot" />
+              <text x={lx} y={ly} fontSize={F_BRAND} className="brand-map__brand-name">{name}</text>
             </g>
           ))}
 
-          {/* Your board marker — animates as sliders move */}
+          {/* Your board — crosshair target */}
           {bx !== null && (
             <motion.g
               animate={{ x: bx, y: by }}
               initial={{ x: bx, y: by }}
               transition={{ type: 'spring', stiffness: 120, damping: 22 }}
             >
-              <circle r={12} className="brand-map__board-ring" />
-              <circle r={4}  className="brand-map__board-dot"  />
-              <text x={17} y={-12} className="brand-map__board-label">Your board</text>
+              {/* Outer ring */}
+              <circle r={14} className="brand-map__board-ring" />
+              {/* Center dot */}
+              <circle r={3.5} className="brand-map__board-dot" />
+              {/* Crosshair ticks */}
+              <line x1={-20} y1={0} x2={-16} y2={0} className="brand-map__board-cross" />
+              <line x1={16}  y1={0} x2={20}  y2={0} className="brand-map__board-cross" />
+              <line x1={0} y1={-20} x2={0} y2={-16} className="brand-map__board-cross" />
+              <line x1={0} y1={16}  x2={0} y2={20}  className="brand-map__board-cross" />
+              {/* Label */}
+              <text x={0} y={30} textAnchor="middle" fontSize={F_BOARD} className="brand-map__board-label">YOUR BOARD</text>
             </motion.g>
           )}
 
           {bx === null && (
-            <text x={W / 2} y={H / 2} textAnchor="middle" dominantBaseline="middle" className="brand-map__empty">
-              Move any slider to see your board position
+            <text x={W / 2} y={H / 2} textAnchor="middle" dominantBaseline="middle" fontSize={F_AXIS} className="brand-map__empty">
+              MOVE ANY SLIDER TO SEE YOUR POSITION
             </text>
           )}
         </svg>

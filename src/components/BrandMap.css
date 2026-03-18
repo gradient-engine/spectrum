@@ -19,71 +19,84 @@
   overflow: visible;
 }
 
-/* Center axes */
+/* ── Axes — hair-thin solid lines ────────────────────────── */
 .brand-map__axis {
-  stroke: var(--muted);
-  stroke-width: 1;
-  opacity: 0.2;
+  stroke: var(--text);
+  stroke-width: 0.4;
+  opacity: 0.18;
 }
 
-/* Axis edge labels — match .brand-slider__label style */
+/* ── Axis edge labels — exact BrandSlider style ──────────── */
 .brand-map__edge-label {
-  fill: var(--muted);
+  fill: #999;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
-/* Brand dots */
+/* ── Brand dots — slider thumb style ─────────────────────── */
 .brand-map__brand { cursor: default; }
 
 .brand-map__brand-dot {
   fill: var(--text);
-  opacity: 0.25;
-  transition: opacity 150ms;
+  opacity: 0.22;
+  transition: opacity 180ms;
 }
 
-.brand-map__brand:hover .brand-map__brand-dot { opacity: 0.8; }
+.brand-map__brand:hover .brand-map__brand-dot {
+  opacity: 0.8;
+}
 
+/* ── Brand names — Helvetica Neue 600 like section headers ── */
 .brand-map__brand-name {
-  fill: var(--text);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 8.5px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  opacity: 0.38;
+  fill: #555;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.55;
   pointer-events: none;
-  transition: opacity 150ms;
+  transition: opacity 180ms;
 }
 
-.brand-map__brand:hover .brand-map__brand-name { opacity: 0.9; }
+[data-theme="dark"] .brand-map__brand-name {
+  fill: var(--muted);
+  opacity: 0.6;
+}
 
-/* Your board */
+.brand-map__brand:hover .brand-map__brand-name {
+  opacity: 1;
+}
+
+/* ── Your board — crosshair target ───────────────────────── */
 .brand-map__board-ring {
   fill: none;
-  stroke: #F59E0B;
-  stroke-width: 1.5;
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.3));
+  stroke: #D4890A;
+  stroke-width: 1;
 }
 
-.brand-map__board-dot { fill: #F59E0B; }
+.brand-map__board-dot {
+  fill: #D4890A;
+}
+
+.brand-map__board-cross {
+  stroke: #D4890A;
+  stroke-width: 1;
+  opacity: 0.7;
+}
 
 .brand-map__board-label {
-  fill: #F59E0B;
+  fill: #D4890A;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 9px;
   font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
 }
 
-/* Empty */
+/* ── Empty state ─────────────────────────────────────────── */
 .brand-map__empty {
   fill: var(--muted);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  opacity: 0.4;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  opacity: 0.35;
 }
