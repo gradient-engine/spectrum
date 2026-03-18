@@ -148,20 +148,23 @@ export default function App() {
     if (!collection || !session) return
 
     const ch = supabase.channel(`collection:${collection.id}`)
+    const syncUsers = () => setOnlineUsers(Object.values(ch.presenceState()).flat())
 
-    ch.on('presence', { event: 'sync' }, () => {
-      const state = ch.presenceState()
-      setOnlineUsers(Object.values(state).flat())
-    })
-    .subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await ch.track({
-          user_id:    session.user.id,
-          name:       session.user.user_metadata?.full_name || session.user.email,
-          avatar_url: session.user.user_metadata?.avatar_url || null,
-        })
-      }
-    })
+    ch
+      .on('presence', { event: 'sync'  }, syncUsers)
+      .on('presence', { event: 'join'  }, syncUsers)
+      .on('presence', { event: 'leave' }, syncUsers)
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await ch.track({
+            user_id:    session.user.id,
+            name:       session.user.user_metadata?.full_name || session.user.email,
+            avatar_url: session.user.user_metadata?.avatar_url || null,
+          })
+          // Force a read after tracking ourselves — sync may fire before we're in state
+          syncUsers()
+        }
+      })
 
     return () => { supabase.removeChannel(ch) }
   }, [collection?.id])
@@ -485,6 +488,7 @@ export default function App() {
               >
                 {darkMode ? <SunIcon /> : <MoonIcon />}
               </button>
+              <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
               {user ? (
                 <button className="signout-btn" onClick={() => supabase.auth.signOut()} title="Sign out">
                   {user.user_metadata?.avatar_url
@@ -597,7 +601,6 @@ export default function App() {
               </div>
 
               <div className="toolbar__right">
-                <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
                 {collection && (
                   <button className="share-btn" onClick={handleShare}>
                     {copied ? 'Copied!' : 'Share'}
