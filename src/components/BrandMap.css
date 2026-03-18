@@ -2,48 +2,15 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 4px 0 0;
   box-sizing: border-box;
 }
 
-/* ── Lens selector ───────────────────────────────────────── */
-.brand-map__lenses {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.brand-map__lens {
-  padding: 5px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 150ms ease;
-  letter-spacing: 0.01em;
-}
-
-.brand-map__lens:hover {
-  color: var(--text);
-  border-color: var(--text);
-}
-
-.brand-map__lens--active {
-  background: var(--text);
-  color: var(--bg);
-  border-color: var(--text);
-}
-
-/* ── SVG wrapper ─────────────────────────────────────────── */
 .brand-map__wrap {
   flex: 1;
   min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .brand-map__svg {
@@ -52,84 +19,71 @@
   overflow: visible;
 }
 
-/* ── Dot grid ────────────────────────────────────────────── */
-.brand-map__dot-fill {
-  fill: var(--muted);
-  opacity: 0.2;
-}
-
-/* ── Center axes ─────────────────────────────────────────── */
+/* Center axes */
 .brand-map__axis {
   stroke: var(--muted);
   stroke-width: 1;
-  opacity: 0.25;
-  stroke-dasharray: 4 4;
+  opacity: 0.2;
 }
 
-/* ── Axis edge labels ────────────────────────────────────── */
+/* Axis edge labels — match .brand-slider__label style */
 .brand-map__edge-label {
   fill: var(--muted);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-/* ── Brand dots ──────────────────────────────────────────── */
-.brand-map__brand {
-  cursor: default;
-}
+/* Brand dots */
+.brand-map__brand { cursor: default; }
 
 .brand-map__brand-dot {
   fill: var(--text);
-  opacity: 0.3;
+  opacity: 0.25;
   transition: opacity 150ms;
 }
 
-.brand-map__brand:hover .brand-map__brand-dot {
-  opacity: 0.85;
-}
+.brand-map__brand:hover .brand-map__brand-dot { opacity: 0.8; }
 
 .brand-map__brand-name {
   fill: var(--text);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  opacity: 0.45;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  opacity: 0.38;
   pointer-events: none;
   transition: opacity 150ms;
 }
 
-.brand-map__brand:hover .brand-map__brand-name {
-  opacity: 1;
-}
+.brand-map__brand:hover .brand-map__brand-name { opacity: 0.9; }
 
-/* ── Your board marker ───────────────────────────────────── */
+/* Your board */
 .brand-map__board-ring {
   fill: none;
   stroke: #F59E0B;
-  stroke-width: 2;
-  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.35));
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.3));
 }
 
-.brand-map__board-dot {
-  fill: #F59E0B;
-}
+.brand-map__board-dot { fill: #F59E0B; }
 
 .brand-map__board-label {
   fill: #F59E0B;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-/* ── Empty state ─────────────────────────────────────────── */
+/* Empty */
 .brand-map__empty {
   fill: var(--muted);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  opacity: 0.5;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  opacity: 0.4;
 }

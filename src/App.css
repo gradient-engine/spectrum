@@ -12,6 +12,7 @@
   --border-light:   #F0EEE9;
   --text:           #111111;
   --muted:          #8A8A8A;
+  --dot-color:      rgba(0, 0, 0, 0.1);
   --sidebar-width:  300px;
   --sidebar-margin: 20px;
   --radius:         16px;
@@ -26,6 +27,7 @@
   --border-light: #242424;
   --text:         #F0F0EC;
   --muted:        #555555;
+  --dot-color:    rgba(255, 255, 255, 0.08);
   --shadow:       0 2px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3);
 }
 
@@ -365,6 +367,11 @@ body {
   overflow-y: auto;
 }
 
+.main--map {
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
 /* ── Toolbar ─────────────────────────────────────────────── */
 .toolbar {
   display: flex;
@@ -498,6 +505,39 @@ body {
 .show-hidden-btn--active {
   border-color: var(--text);
   color: var(--text);
+}
+
+/* Toolbar lens pills (map mode) */
+.toolbar__lenses {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar__lens {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.toolbar__lens:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.toolbar__lens--active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
 }
 
 .toolbar__error {

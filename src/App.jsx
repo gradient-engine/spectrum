@@ -52,6 +52,13 @@ function passes(imageValue, sliderValue) {
   return Math.abs(imageValue - sliderValue) <= tolerance
 }
 
+const LENSES = [
+  { id: 'market',   name: 'Market Position',  x: 'minimal_decorative',        y: 'rebellion_authority'   },
+  { id: 'audience', name: 'Audience Signal',   x: 'approachable_aspirational', y: 'mass_niche'            },
+  { id: 'energy',   name: 'Brand Energy',      x: 'bold_subtle',               y: 'playful_formal'        },
+  { id: 'trust',    name: 'Trust vs Edge',     x: 'playful_formal',            y: 'rebellion_authority'   },
+]
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -256,6 +263,7 @@ export default function App() {
   const [tagErrors,  setTagErrors]  = useState([])
   const [showHidden, setShowHidden] = useState(false)
   const [viewMode,   setViewMode]   = useState('grid')
+  const [lensId,     setLensId]     = useState('market')
   const fileInputRef = useRef(null)
 
   // ── Derived ───────────────────────────────────────────────
@@ -525,35 +533,49 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="main">
+      <main className={`main${viewMode === 'map' ? ' main--map' : ''}`}>
         {dataLoading ? (
           <div className="loading-state">Loading your images…</div>
         ) : (
           <>
             <div className="toolbar">
               <div className="toolbar__left">
-                <button
-                  className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
-                  onClick={handleUploadClick}
-                  disabled={isTagging}
-                >
-                  {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple
-                  style={{ display: 'none' }} onChange={handleFileSelect} />
-                {hiddenCount > 0 && (
-                  <button
-                    className={`show-hidden-btn${showHidden ? ' show-hidden-btn--active' : ''}`}
-                    onClick={() => setShowHidden(v => !v)}
-                  >
-                    {showHidden ? 'Hide hidden' : `Show hidden (${hiddenCount})`}
-                  </button>
-                )}
-                {tagErrors.length > 0 && (
-                  <span className="toolbar__error">
-                    {tagErrors.length} failed
-                    <button onClick={() => setTagErrors([])}>✕</button>
-                  </span>
+                {viewMode === 'map' ? (
+                  <div className="toolbar__lenses">
+                    {LENSES.map(l => (
+                      <button
+                        key={l.id}
+                        className={`toolbar__lens${lensId === l.id ? ' toolbar__lens--active' : ''}`}
+                        onClick={() => setLensId(l.id)}
+                      >{l.name}</button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
+                      onClick={handleUploadClick}
+                      disabled={isTagging}
+                    >
+                      {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}
+                    </button>
+                    <input ref={fileInputRef} type="file" accept="image/*" multiple
+                      style={{ display: 'none' }} onChange={handleFileSelect} />
+                    {hiddenCount > 0 && (
+                      <button
+                        className={`show-hidden-btn${showHidden ? ' show-hidden-btn--active' : ''}`}
+                        onClick={() => setShowHidden(v => !v)}
+                      >
+                        {showHidden ? 'Hide hidden' : `Show hidden (${hiddenCount})`}
+                      </button>
+                    )}
+                    {tagErrors.length > 0 && (
+                      <span className="toolbar__error">
+                        {tagErrors.length} failed
+                        <button onClick={() => setTagErrors([])}>✕</button>
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -605,7 +627,7 @@ export default function App() {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
                 >
-                  <BrandMap boardPosition={boardPosition} spectrums={SPECTRUMS} />
+                  <BrandMap boardPosition={boardPosition} spectrums={SPECTRUMS} lensId={lensId} />
                 </motion.div>
               )}
             </AnimatePresence>
