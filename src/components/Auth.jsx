@@ -22,16 +22,16 @@ function ParticleCanvas() {
     let animId
 
     const resize = () => {
-      canvas.width  = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
     }
     resize()
     window.addEventListener('resize', resize)
 
     const COUNT = 55
     const dots = Array.from({ length: COUNT }, () => ({
-      x:         Math.random() * canvas.offsetWidth,
-      y:         Math.random() * canvas.offsetHeight,
+      x:         Math.random() * window.innerWidth,
+      y:         Math.random() * window.innerHeight,
       r:         Math.random() * 1.4 + 0.4,
       angle:     Math.random() * Math.PI * 2,
       speed:     Math.random() * 0.22 + 0.08,
@@ -112,7 +112,7 @@ export default function Auth({ onGuest }) {
         </button>
         {onGuest && (
           <button className="auth__guest-btn" onClick={onGuest}>
-            Explore first, sign in later
+            Just exploring — I'll sign in later
           </button>
         )}
       </div>

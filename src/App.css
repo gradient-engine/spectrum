@@ -320,7 +320,7 @@ body {
 }
 
 .sidebar__sliders > .slider-group:first-child {
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .slider-group__label {
@@ -516,14 +516,18 @@ body {
 [data-theme="dark"] .image-grid__empty strong   { color: #666; }
 [data-theme="dark"] .image-grid__empty code     { background: #2a2a2a; color: var(--text); }
 
-/* Upload + Share: dark bg in light mode, need dark text in dark mode */
+/* Upload + Share: match export/show-hidden style in dark mode for consistency */
 [data-theme="dark"] .upload-btn {
-  color: #111;
+  background: var(--card-bg);
+  border-color: var(--text);
+  color: var(--text);
 }
 [data-theme="dark"] .upload-btn:hover:not(:disabled) {
-  background: #ddd;
+  background: #2a2a2a;
 }
 [data-theme="dark"] .share-btn {
-  color: #111;
+  background: var(--card-bg);
+  border-color: var(--text);
+  color: var(--text);
 }
-[data-theme="dark"] .share-btn:hover { background: #ccc; }
+[data-theme="dark"] .share-btn:hover { background: #2a2a2a; }
