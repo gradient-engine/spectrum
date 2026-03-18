@@ -147,26 +147,49 @@ export default function App() {
   useEffect(() => {
     if (!collection || !session) return
 
-    const ch = supabase.channel(`collection:${collection.id}`)
-    const syncUsers = () => setOnlineUsers(Object.values(ch.presenceState()).flat())
+    const userId = session.user.id
+    const colId  = collection.id
 
-    ch
-      .on('presence', { event: 'sync'  }, syncUsers)
-      .on('presence', { event: 'join'  }, syncUsers)
-      .on('presence', { event: 'leave' }, syncUsers)
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await ch.track({
-            user_id:    session.user.id,
-            name:       session.user.user_metadata?.full_name || session.user.email,
-            avatar_url: session.user.user_metadata?.avatar_url || null,
-          })
-          // Force a read after tracking ourselves — sync may fire before we're in state
-          syncUsers()
-        }
-      })
+    // Load all active presence rows for this collection (active = seen in last 2 min)
+    async function loadPresence() {
+      const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+      const { data } = await supabase
+        .from('user_presence')
+        .select('*')
+        .eq('collection_id', colId)
+        .gte('updated_at', cutoff)
+      if (data) setOnlineUsers(data)
+    }
 
-    return () => { supabase.removeChannel(ch) }
+    // Upsert own row — called on mount and every 30s as a heartbeat
+    async function heartbeat() {
+      await supabase.from('user_presence').upsert({
+        user_id:       userId,
+        collection_id: colId,
+        name:          session.user.user_metadata?.full_name || session.user.email,
+        avatar_url:    session.user.user_metadata?.avatar_url || null,
+        updated_at:    new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+    }
+
+    heartbeat()
+    loadPresence()
+    const timer = setInterval(() => { heartbeat(); loadPresence() }, 30_000)
+
+    // Realtime: re-load presence whenever any row in this collection changes
+    const ch = supabase.channel(`presence-db:${colId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'user_presence',
+        filter: `collection_id=eq.${colId}`,
+      }, loadPresence)
+      .subscribe()
+
+    return () => {
+      clearInterval(timer)
+      supabase.removeChannel(ch)
+      // Mark ourselves offline immediately on unmount
+      supabase.from('user_presence').delete().eq('user_id', userId).then(() => {})
+    }
   }, [collection?.id])
 
   async function joinCollectionByCode(code) {
