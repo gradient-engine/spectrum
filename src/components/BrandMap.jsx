@@ -110,24 +110,16 @@ export default function BrandMap({ boardPosition, spectrums, lensId = 'market' }
             </g>
           ))}
 
-          {/* Your board — crosshair target */}
+          {/* Your board — minimal ring + dot */}
           {bx !== null && (
             <motion.g
               animate={{ x: bx, y: by }}
               initial={{ x: bx, y: by }}
               transition={{ type: 'spring', stiffness: 120, damping: 22 }}
             >
-              {/* Outer ring */}
-              <circle r={14} className="brand-map__board-ring" />
-              {/* Center dot */}
-              <circle r={3.5} className="brand-map__board-dot" />
-              {/* Crosshair ticks */}
-              <line x1={-20} y1={0} x2={-16} y2={0} className="brand-map__board-cross" />
-              <line x1={16}  y1={0} x2={20}  y2={0} className="brand-map__board-cross" />
-              <line x1={0} y1={-20} x2={0} y2={-16} className="brand-map__board-cross" />
-              <line x1={0} y1={16}  x2={0} y2={20}  className="brand-map__board-cross" />
-              {/* Label */}
-              <text x={0} y={30} textAnchor="middle" fontSize={F_BOARD} className="brand-map__board-label">YOUR BOARD</text>
+              <circle r={11} className="brand-map__board-ring" />
+              <circle r={2.5} className="brand-map__board-dot" />
+              <text x={0} y={22} textAnchor="middle" fontSize={F_BOARD} className="brand-map__board-label">your board</text>
             </motion.g>
           )}
 

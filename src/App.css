@@ -523,7 +523,8 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 150ms ease;
   white-space: nowrap;
@@ -538,6 +539,10 @@ body {
   background: var(--text);
   color: var(--bg);
   border-color: var(--text);
+}
+
+.toolbar__lens--active:hover {
+  color: var(--bg);
 }
 
 .toolbar__error {
