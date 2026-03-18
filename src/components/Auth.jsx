@@ -112,7 +112,7 @@ export default function Auth({ onGuest }) {
         </button>
         {onGuest && (
           <button className="auth__guest-btn" onClick={onGuest}>
-            Just exploring — I'll sign in later
+            Explore first, sign in later
           </button>
         )}
       </div>

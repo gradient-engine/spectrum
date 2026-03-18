@@ -516,15 +516,27 @@ body {
 [data-theme="dark"] .image-grid__empty strong   { color: #666; }
 [data-theme="dark"] .image-grid__empty code     { background: #2a2a2a; color: var(--text); }
 
-/* Upload + Share: match export/show-hidden style in dark mode for consistency */
+/* Upload: white with black text in dark mode (primary CTA stands out) */
 [data-theme="dark"] .upload-btn {
-  background: var(--card-bg);
+  background: #F0F0EC;
+  border-color: #F0F0EC;
+  color: #111;
+}
+[data-theme="dark"] .upload-btn:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+}
+
+/* Show hidden: match export style in dark mode */
+[data-theme="dark"] .show-hidden-btn {
+  color: var(--text);
+}
+[data-theme="dark"] .show-hidden-btn--active {
   border-color: var(--text);
   color: var(--text);
 }
-[data-theme="dark"] .upload-btn:hover:not(:disabled) {
-  background: #2a2a2a;
-}
+
+/* Share: match export style in dark mode */
 [data-theme="dark"] .share-btn {
   background: var(--card-bg);
   border-color: var(--text);
