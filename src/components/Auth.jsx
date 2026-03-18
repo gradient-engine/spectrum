@@ -22,16 +22,16 @@ function ParticleCanvas() {
     let animId
 
     const resize = () => {
-      canvas.width  = window.innerWidth
-      canvas.height = window.innerHeight
+      canvas.width  = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
     }
     resize()
     window.addEventListener('resize', resize)
 
     const COUNT = 55
     const dots = Array.from({ length: COUNT }, () => ({
-      x:          Math.random() * window.innerWidth,
-      y:          Math.random() * window.innerHeight,
+      x:          Math.random() * canvas.offsetWidth,
+      y:          Math.random() * canvas.offsetHeight,
       r:          Math.random() * 1.4 + 0.4,
       angle:      Math.random() * Math.PI * 2,
       speed:      Math.random() * 0.22 + 0.08,
@@ -53,7 +53,7 @@ function ParticleCanvas() {
 
         ctx.beginPath()
         ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(0,0,0,0.09)'
+        ctx.fillStyle = 'rgba(0,0,0,0.15)'
         ctx.fill()
       })
 
@@ -67,7 +67,7 @@ function ParticleCanvas() {
             ctx.beginPath()
             ctx.moveTo(dots[i].x, dots[i].y)
             ctx.lineTo(dots[j].x, dots[j].y)
-            ctx.strokeStyle = `rgba(0,0,0,${0.05 * (1 - dist / 110)})`
+            ctx.strokeStyle = `rgba(0,0,0,${0.1 * (1 - dist / 110)})`
             ctx.lineWidth = 0.5
             ctx.stroke()
           }
