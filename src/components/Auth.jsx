@@ -53,7 +53,7 @@ function ParticleCanvas() {
 
         ctx.beginPath()
         ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(0,0,0,0.15)'
+        ctx.fillStyle = 'rgba(255,255,255,0.15)'
         ctx.fill()
       })
 
@@ -67,7 +67,7 @@ function ParticleCanvas() {
             ctx.beginPath()
             ctx.moveTo(dots[i].x, dots[i].y)
             ctx.lineTo(dots[j].x, dots[j].y)
-            ctx.strokeStyle = `rgba(0,0,0,${0.1 * (1 - dist / 110)})`
+            ctx.strokeStyle = `rgba(255,255,255,${0.1 * (1 - dist / 110)})`
             ctx.lineWidth = 0.5
             ctx.stroke()
           }
