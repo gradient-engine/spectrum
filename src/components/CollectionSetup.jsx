@@ -1,13 +1,42 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import './CollectionSetup.css'
 
-export default function CollectionSetup({ session, onDone }) {
-  const [mode,       setMode]       = useState('create') // 'create' | 'join'
-  const [name,       setName]       = useState('')
-  const [code,       setCode]       = useState('')
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState('')
+export default function CollectionSetup({ session, onDone, pendingCode }) {
+  const [mode,    setMode]    = useState(pendingCode ? 'join' : 'create')
+  const [name,    setName]    = useState('')
+  const [code,    setCode]    = useState(pendingCode || '')
+  const [loading, setLoading] = useState(!!pendingCode)
+  const [error,   setError]   = useState('')
+
+  // Auto-join when arriving via invite link
+  useEffect(() => {
+    if (pendingCode) joinWithCode(pendingCode)
+  }, [])
+
+  async function joinWithCode(c) {
+    setLoading(true)
+    setError('')
+    try {
+      const { data: col, error: colErr } = await supabase
+        .from('collections')
+        .select('*')
+        .eq('invite_code', c.trim().toLowerCase())
+        .single()
+      if (colErr || !col) {
+        setError('This invite link is invalid or has expired.')
+        setLoading(false)
+        return
+      }
+      await supabase.from('collection_members')
+        .upsert({ collection_id: col.id, user_id: session.user.id })
+      onDone(col)
+    } catch (err) {
+      setError('Could not join. Please try again.')
+      console.error(err)
+    }
+    setLoading(false)
+  }
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -38,29 +67,24 @@ export default function CollectionSetup({ session, onDone }) {
   async function handleJoin(e) {
     e.preventDefault()
     if (!code.trim()) return
-    setLoading(true)
-    setError('')
-    try {
-      const { data: col, error: colErr } = await supabase
-        .from('collections')
-        .select('*')
-        .eq('invite_code', code.trim().toLowerCase())
-        .single()
-      if (colErr || !col) {
-        setError('Invalid invite code. Check the link and try again.')
-        setLoading(false)
-        return
-      }
+    joinWithCode(code)
+  }
 
-      await supabase.from('collection_members')
-        .upsert({ collection_id: col.id, user_id: session.user.id })
-
-      onDone(col)
-    } catch (err) {
-      setError('Something went wrong. Please try again.')
-      console.error(err)
-    }
-    setLoading(false)
+  // While auto-joining, show a minimal loading screen
+  if (pendingCode && loading && !error) {
+    return (
+      <div className="collection-setup">
+        <div className="collection-setup__card">
+          <div className="collection-setup__header">
+            <div className="collection-setup__title">Spectrum</div>
+            <div className="collection-setup__sub">Brand Personality Filter</div>
+          </div>
+          <p className="collection-setup__desc" style={{ textAlign: 'center', marginTop: '16px' }}>
+            Joining collection…
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -71,20 +95,23 @@ export default function CollectionSetup({ session, onDone }) {
           <div className="collection-setup__sub">Brand Personality Filter</div>
         </div>
 
-        <div className="collection-setup__tabs">
-          <button
-            className={`collection-setup__tab${mode === 'create' ? ' collection-setup__tab--active' : ''}`}
-            onClick={() => { setMode('create'); setError('') }}
-          >
-            New collection
-          </button>
-          <button
-            className={`collection-setup__tab${mode === 'join' ? ' collection-setup__tab--active' : ''}`}
-            onClick={() => { setMode('join'); setError('') }}
-          >
-            Join existing
-          </button>
-        </div>
+        {/* Tabs — only shown when not arriving via invite link */}
+        {!pendingCode && (
+          <div className="collection-setup__tabs">
+            <button
+              className={`collection-setup__tab${mode === 'create' ? ' collection-setup__tab--active' : ''}`}
+              onClick={() => { setMode('create'); setError('') }}
+            >
+              New collection
+            </button>
+            <button
+              className={`collection-setup__tab${mode === 'join' ? ' collection-setup__tab--active' : ''}`}
+              onClick={() => { setMode('join'); setError('') }}
+            >
+              Join existing
+            </button>
+          </div>
+        )}
 
         {mode === 'create' ? (
           <form onSubmit={handleCreate} className="collection-setup__form">
@@ -111,23 +138,31 @@ export default function CollectionSetup({ session, onDone }) {
           </form>
         ) : (
           <form onSubmit={handleJoin} className="collection-setup__form">
-            <p className="collection-setup__desc">
-              Paste the invite code from a shared Spectrum link.
-            </p>
-            <input
-              className="collection-setup__input"
-              type="text"
-              placeholder="8-character code"
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              autoFocus
-              maxLength={8}
-            />
+            {pendingCode ? (
+              <p className="collection-setup__desc">
+                There was a problem joining automatically. Click below to try again.
+              </p>
+            ) : (
+              <p className="collection-setup__desc">
+                Paste the invite code from a shared Spectrum link.
+              </p>
+            )}
+            {!pendingCode && (
+              <input
+                className="collection-setup__input"
+                type="text"
+                placeholder="8-character code"
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                autoFocus
+                maxLength={8}
+              />
+            )}
             {error && <p className="collection-setup__error">{error}</p>}
             <button
               className="collection-setup__btn"
               type="submit"
-              disabled={loading || !code.trim()}
+              disabled={loading || (!pendingCode && !code.trim())}
             >
               {loading ? 'Joining…' : 'Join collection'}
             </button>

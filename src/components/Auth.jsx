@@ -89,6 +89,9 @@ function ParticleCanvas() {
 
 export default function Auth({ onGuest }) {
   async function handleGoogleSignIn() {
+    // Preserve join code across OAuth redirect (params are lost on return)
+    const joinCode = new URLSearchParams(window.location.search).get('join')
+    if (joinCode) localStorage.setItem('spectrum-join-code', joinCode)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },

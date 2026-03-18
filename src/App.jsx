@@ -138,10 +138,11 @@ export default function App() {
   }, [])
 
   // ── Collection ────────────────────────────────────────────
-  const [collection,  setCollection]  = useState(null)
-  const [showSetup,   setShowSetup]   = useState(false)
-  const [onlineUsers, setOnlineUsers] = useState([])
-  const [copied,      setCopied]      = useState(false)
+  const [collection,      setCollection]      = useState(null)
+  const [showSetup,       setShowSetup]       = useState(false)
+  const [pendingJoinCode, setPendingJoinCode] = useState(null)
+  const [onlineUsers,     setOnlineUsers]     = useState([])
+  const [copied,          setCopied]          = useState(false)
 
   useEffect(() => {
     if (!collection || !session) return
@@ -200,8 +201,13 @@ export default function App() {
   async function loadUserData() {
     setDataLoading(true)
 
-    const joinCode = new URLSearchParams(window.location.search).get('join')
+    // Check URL first, then localStorage (survives OAuth redirect)
+    let joinCode = new URLSearchParams(window.location.search).get('join')
+    if (!joinCode) joinCode = localStorage.getItem('spectrum-join-code')
+
     if (joinCode) {
+      localStorage.removeItem('spectrum-join-code')
+      window.history.replaceState({}, '', window.location.pathname)
       await joinCollectionByCode(joinCode)
     }
 
@@ -213,6 +219,8 @@ export default function App() {
       .maybeSingle()
 
     if (!membership) {
+      // Pass any pending code to CollectionSetup so it can auto-join
+      setPendingJoinCode(joinCode || null)
       setShowSetup(true)
       setDataLoading(false)
       return
@@ -245,6 +253,7 @@ export default function App() {
   async function handleCollectionCreated(col) {
     setCollection(col)
     setShowSetup(false)
+    setPendingJoinCode(null)
     setUserImages([])
   }
 
@@ -453,7 +462,7 @@ export default function App() {
   )
 
   if (showSetup && session) return (
-    <CollectionSetup session={session} onDone={handleCollectionCreated} />
+    <CollectionSetup session={session} onDone={handleCollectionCreated} pendingCode={pendingJoinCode} />
   )
 
   const isFiltering = activeCount > 0
