@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import BrandSlider from './components/BrandSlider'
-import ImageGrid   from './components/ImageGrid'
-import Auth        from './components/Auth'
-import metadata    from './metadata.json'
+import BrandSlider      from './components/BrandSlider'
+import ImageGrid        from './components/ImageGrid'
+import Auth             from './components/Auth'
+import CollectionSetup  from './components/CollectionSetup'
+import PresenceAvatars  from './components/PresenceAvatars'
+import metadata         from './metadata.json'
 import { supabase, BUCKET } from './lib/supabase'
 import './App.css'
 
@@ -77,10 +79,63 @@ export default function App() {
         setUserImages([])
         setHiddenStatic(new Set())
         setDeletedStatic(new Set())
+        setCollection(null)
+        setOnlineUsers([])
       }
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // ── Collection ────────────────────────────────────────────
+  const [collection,  setCollection]  = useState(null)
+  const [showSetup,   setShowSetup]   = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState([])
+  const [copied,      setCopied]      = useState(false)
+
+  // Presence channel — connect when collection is loaded
+  useEffect(() => {
+    if (!collection || !session) return
+
+    const ch = supabase.channel(`collection:${collection.id}`)
+
+    ch.on('presence', { event: 'sync' }, () => {
+      const state = ch.presenceState()
+      setOnlineUsers(Object.values(state).flat())
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await ch.track({
+          user_id:    session.user.id,
+          name:       session.user.user_metadata?.full_name || session.user.email,
+          avatar_url: session.user.user_metadata?.avatar_url || null,
+        })
+      }
+    })
+
+    return () => { supabase.removeChannel(ch) }
+  }, [collection?.id])
+
+  async function joinCollectionByCode(code) {
+    const { data: col } = await supabase
+      .from('collections')
+      .select('*')
+      .eq('invite_code', code.trim().toLowerCase())
+      .single()
+    if (!col) return null
+    await supabase.from('collection_members')
+      .upsert({ collection_id: col.id, user_id: session.user.id })
+    window.history.replaceState({}, '', window.location.pathname)
+    return col
+  }
+
+  function handleShare() {
+    if (!collection) return
+    const url = `${window.location.origin}?join=${collection.invite_code}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   // ── User data ─────────────────────────────────────────────
   const [userImages,    setUserImages]    = useState([])
@@ -94,10 +149,42 @@ export default function App() {
 
   async function loadUserData() {
     setDataLoading(true)
+
+    // Handle invite link
+    const joinCode = new URLSearchParams(window.location.search).get('join')
+    if (joinCode) {
+      await joinCollectionByCode(joinCode)
+    }
+
+    // Find user's collection membership
+    const { data: membership } = await supabase
+      .from('collection_members')
+      .select('collection_id, collections(*)')
+      .eq('user_id', session.user.id)
+      .limit(1)
+      .maybeSingle()
+
+    if (!membership) {
+      setShowSetup(true)
+      setDataLoading(false)
+      return
+    }
+
+    const col = membership.collections
+    setCollection(col)
+
+    // Load images + prefs in parallel
     const [{ data: imgs }, { data: prefs }] = await Promise.all([
-      supabase.from('images').select('*').order('created_at', { ascending: true }),
-      supabase.from('user_prefs').select('*').eq('user_id', session.user.id).maybeSingle(),
+      supabase.from('images')
+        .select('*')
+        .eq('collection_id', col.id)
+        .order('created_at', { ascending: true }),
+      supabase.from('user_prefs')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle(),
     ])
+
     if (imgs) {
       setUserImages(imgs.map(img => ({ ...img, url: getPublicUrl(img.storage_path) })))
     }
@@ -106,6 +193,12 @@ export default function App() {
       setDeletedStatic(new Set(prefs.deleted_static || []))
     }
     setDataLoading(false)
+  }
+
+  async function handleCollectionCreated(col) {
+    setCollection(col)
+    setShowSetup(false)
+    setUserImages([])
   }
 
   async function saveStaticPrefs(hidden, deleted) {
@@ -219,7 +312,7 @@ export default function App() {
   async function handleFileSelect(e) {
     const files = Array.from(e.target.files)
     e.target.value = ''
-    if (!files.length || !session) return
+    if (!files.length || !session || !collection) return
 
     const tooBig = files.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
     if (tooBig.length) alert(`Skipped (>${MAX_FILE_MB}MB):\n${tooBig.map(f => f.name).join('\n')}`)
@@ -253,7 +346,8 @@ export default function App() {
         const tags = await res.json()
 
         const { data: newImg, error: dbErr } = await supabase.from('images').insert({
-          filename: file.name, storage_path: storagePath, tags, user_id: session.user.id,
+          filename: file.name, storage_path: storagePath, tags,
+          user_id: session.user.id, collection_id: collection.id,
         }).select().single()
         if (dbErr) throw dbErr
 
@@ -290,7 +384,8 @@ export default function App() {
       Loading…
     </div>
   )
-  if (!session) return <Auth />
+  if (!session)  return <Auth />
+  if (showSetup) return <CollectionSetup session={session} onDone={handleCollectionCreated} />
 
   const isFiltering = activeCount > 0
   const isTagging   = tagging.length > 0
@@ -314,6 +409,9 @@ export default function App() {
               }
             </button>
           </div>
+          {collection && (
+            <div className="sidebar__collection-name">{collection.name}</div>
+          )}
         </header>
 
         <div className="sidebar__counter">
@@ -379,6 +477,12 @@ export default function App() {
                 )}
               </div>
               <div className="toolbar__right">
+                <PresenceAvatars users={onlineUsers} />
+                {collection && (
+                  <button className="share-btn" onClick={handleShare}>
+                    {copied ? 'Copied!' : 'Share'}
+                  </button>
+                )}
                 <button className="export-btn" onClick={handleExport} disabled={visibleSet.size === 0}>
                   Export {visibleSet.size > 0 ? `${visibleSet.size} ` : ''}results
                 </button>

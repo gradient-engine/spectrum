@@ -391,3 +391,37 @@ body {
   padding: 0;
   line-height: 1;
 }
+
+/* Share button */
+.share-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: 100px;
+  padding: 7px 16px;
+  cursor: pointer;
+  border: 1px solid var(--text);
+  background: var(--text);
+  color: #fff;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  min-width: 68px;
+  text-align: center;
+}
+
+.share-btn:hover {
+  background: #2a2a2a;
+}
+
+/* Collection name in sidebar */
+.sidebar__collection-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

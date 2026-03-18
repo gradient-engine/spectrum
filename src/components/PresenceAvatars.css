@@ -1,0 +1,56 @@
+.presence {
+  display: flex;
+  align-items: center;
+}
+
+.presence__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--border);
+  overflow: hidden;
+  margin-left: -8px;
+  position: relative;
+  cursor: default;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.presence__avatar:first-child {
+  margin-left: 0;
+}
+
+.presence__avatar:hover {
+  transform: translateY(-2px);
+  z-index: 99 !important;
+}
+
+.presence__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.presence__avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.presence__avatar--overflow {
+  background: var(--border);
+}
+
+.presence__avatar--overflow span {
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+}
