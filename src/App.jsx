@@ -229,23 +229,18 @@ export default function App() {
     const col = membership.collections
     setCollection(col)
 
-    const [{ data: imgs }, { data: prefs }] = await Promise.all([
-      supabase.from('images')
-        .select('*')
-        .eq('collection_id', col.id)
-        .order('created_at', { ascending: true }),
-      supabase.from('user_prefs')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .maybeSingle(),
-    ])
+    // Static prefs are collection-scoped so all members share the same view
+    setHiddenStatic(new Set(col.hidden_static   || []))
+    setDeletedStatic(new Set(col.deleted_static  || []))
+
+    const { data: imgs } = await supabase
+      .from('images')
+      .select('*')
+      .eq('collection_id', col.id)
+      .order('created_at', { ascending: true })
 
     if (imgs) {
       setUserImages(imgs.map(img => ({ ...img, url: getPublicUrl(img.storage_path) })))
-    }
-    if (prefs) {
-      setHiddenStatic(new Set(prefs.hidden_static  || []))
-      setDeletedStatic(new Set(prefs.deleted_static || []))
     }
     setDataLoading(false)
   }
@@ -258,12 +253,12 @@ export default function App() {
   }
 
   async function saveStaticPrefs(hidden, deleted) {
-    if (!session) return
-    await supabase.from('user_prefs').upsert({
-      user_id:        session.user.id,
+    if (!session || !collection) return
+    // Prefs are stored on the collection so all members share the same view
+    await supabase.from('collections').update({
       hidden_static:  [...hidden],
       deleted_static: [...deleted],
-    }, { onConflict: 'user_id' })
+    }).eq('id', collection.id)
   }
 
   // ── Slider / UI state ─────────────────────────────────────
