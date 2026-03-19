@@ -30,6 +30,7 @@ export default function CollectionSetup({ session, onDone, pendingCode }) {
       }
       await supabase.from('collection_members')
         .upsert({ collection_id: col.id, user_id: session.user.id })
+      localStorage.setItem('spectrum-active-collection', col.id)
       onDone(col)
     } catch (err) {
       setError('Could not join. Please try again.')
@@ -56,6 +57,7 @@ export default function CollectionSetup({ session, onDone, pendingCode }) {
         .insert({ collection_id: col.id, user_id: session.user.id })
       if (memErr) throw memErr
 
+      localStorage.setItem('spectrum-active-collection', col.id)
       onDone(col)
     } catch (err) {
       setError('Something went wrong. Please try again.')

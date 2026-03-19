@@ -586,17 +586,120 @@ body {
   background: #2a2a2a;
 }
 
-/* Collection name in sidebar */
-.sidebar__collection-name {
+/* Collection switcher */
+.sidebar__collection-wrap {
+  position: relative;
+  margin-top: 10px;
+}
+
+.sidebar__collection-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #a855f7;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
-  letter-spacing: 0.06em;
-  color: #a855f7;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-top: 10px;
   white-space: nowrap;
+  max-width: 100%;
+}
+.sidebar__collection-trigger span {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar__collection-trigger svg {
+  opacity: 0.55;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.collection-switcher {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 190px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.collection-switcher__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+.collection-switcher__item:hover {
+  background: var(--bg);
+}
+.collection-switcher__item--active {
+  font-weight: 600;
+}
+.collection-switcher__item--active .collection-switcher__name::before {
+  content: '· ';
+  color: #a855f7;
+}
+.collection-switcher__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collection-switcher__badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--bg);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.collection-switcher__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.collection-switcher__new {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+}
+.collection-switcher__new:hover {
+  color: var(--text);
+  background: var(--bg);
 }
 
 /* ── Dark mode overrides ─────────────────────────────────────── */

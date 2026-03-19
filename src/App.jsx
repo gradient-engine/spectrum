@@ -72,6 +72,14 @@ function getPublicUrl(path) {
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
+function ChevronDownIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  )
+}
+
 function MoonIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -99,9 +107,10 @@ function SunIcon() {
 export default function App() {
   // ── Dark mode ─────────────────────────────────────────────
   const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem('spectrum-dark') === 'true'
-    document.documentElement.dataset.theme = stored ? 'dark' : 'light'
-    return stored
+    const stored = localStorage.getItem('spectrum-dark')
+    const isDark = stored !== null ? stored === 'true' : true   // default: dark
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+    return isDark
   })
 
   useEffect(() => {
@@ -138,11 +147,14 @@ export default function App() {
   }, [])
 
   // ── Collection ────────────────────────────────────────────
-  const [collection,      setCollection]      = useState(null)
-  const [showSetup,       setShowSetup]       = useState(false)
-  const [pendingJoinCode, setPendingJoinCode] = useState(null)
-  const [onlineUsers,     setOnlineUsers]     = useState([])
-  const [copied,          setCopied]          = useState(false)
+  const [collection,             setCollection]             = useState(null)
+  const [allCollections,         setAllCollections]         = useState([])
+  const [showSetup,              setShowSetup]              = useState(false)
+  const [showCollectionSwitcher, setShowCollectionSwitcher] = useState(false)
+  const [pendingJoinCode,        setPendingJoinCode]        = useState(null)
+  const [onlineUsers,            setOnlineUsers]            = useState([])
+  const [copied,                 setCopied]                 = useState(false)
+  const switcherRef = useRef(null)
 
   useEffect(() => {
     if (!collection || !session) return
@@ -237,14 +249,13 @@ export default function App() {
       await joinCollectionByCode(joinCode)
     }
 
-    const { data: membership } = await supabase
+    const { data: memberships } = await supabase
       .from('collection_members')
       .select('collection_id, collections(*)')
       .eq('user_id', session.user.id)
-      .limit(1)
-      .maybeSingle()
+      .order('joined_at', { ascending: false })
 
-    if (!membership) {
+    if (!memberships?.length) {
       // Pass any pending code to CollectionSetup so it can auto-join
       setPendingJoinCode(joinCode || null)
       setShowSetup(true)
@@ -252,7 +263,14 @@ export default function App() {
       return
     }
 
-    const col = membership.collections
+    const cols = memberships.map(m => m.collections)
+    setAllCollections(cols)
+
+    // Restore last-used collection; default to most recently joined
+    const savedId = localStorage.getItem('spectrum-active-collection')
+    const active  = memberships.find(m => m.collection_id === savedId) || memberships[0]
+    const col     = active.collections
+    localStorage.setItem('spectrum-active-collection', col.id)
     setCollection(col)
 
     // Static prefs are collection-scoped so all members share the same view
@@ -272,11 +290,43 @@ export default function App() {
   }
 
   async function handleCollectionCreated(col) {
+    setAllCollections(prev => {
+      const already = prev.find(c => c.id === col.id)
+      return already ? prev : [col, ...prev]
+    })
     setCollection(col)
+    setHiddenStatic(new Set(col.hidden_static  || []))
+    setDeletedStatic(new Set(col.deleted_static || []))
     setShowSetup(false)
     setPendingJoinCode(null)
     setUserImages([])
   }
+
+  async function switchCollection(col) {
+    setCollection(col)
+    setHiddenStatic(new Set(col.hidden_static  || []))
+    setDeletedStatic(new Set(col.deleted_static || []))
+    localStorage.setItem('spectrum-active-collection', col.id)
+    setShowCollectionSwitcher(false)
+    const { data: imgs } = await supabase
+      .from('images')
+      .select('*')
+      .eq('collection_id', col.id)
+      .order('created_at', { ascending: true })
+    if (imgs) setUserImages(imgs.map(img => ({ ...img, url: getPublicUrl(img.storage_path) })))
+  }
+
+  // Close collection switcher on outside click
+  useEffect(() => {
+    if (!showCollectionSwitcher) return
+    function onMouseDown(e) {
+      if (switcherRef.current && !switcherRef.current.contains(e.target)) {
+        setShowCollectionSwitcher(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [showCollectionSwitcher])
 
   async function saveStaticPrefs(hidden, deleted) {
     if (!session || !collection) return
@@ -529,7 +579,38 @@ export default function App() {
             </div>
           </div>
           {collection && (
-            <div className="sidebar__collection-name">{collection.name}</div>
+            <div className="sidebar__collection-wrap" ref={switcherRef}>
+              <button
+                className="sidebar__collection-trigger"
+                onClick={() => setShowCollectionSwitcher(v => !v)}
+              >
+                <span>{collection.name}</span>
+                <ChevronDownIcon />
+              </button>
+              {showCollectionSwitcher && (
+                <div className="collection-switcher">
+                  {allCollections.map(c => (
+                    <button
+                      key={c.id}
+                      className={`collection-switcher__item${c.id === collection.id ? ' collection-switcher__item--active' : ''}`}
+                      onClick={() => c.id === collection.id ? setShowCollectionSwitcher(false) : switchCollection(c)}
+                    >
+                      <span className="collection-switcher__name">{c.name}</span>
+                      {c.owner_id !== session?.user?.id && (
+                        <span className="collection-switcher__badge">shared</span>
+                      )}
+                    </button>
+                  ))}
+                  <div className="collection-switcher__divider" />
+                  <button
+                    className="collection-switcher__new"
+                    onClick={() => { setShowSetup(true); setShowCollectionSwitcher(false) }}
+                  >
+                    + New collection
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </header>
 
