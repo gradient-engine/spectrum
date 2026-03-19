@@ -272,6 +272,7 @@ export default function App() {
     const col     = active.collections
     localStorage.setItem('spectrum-active-collection', col.id)
     setCollection(col)
+    loadFiltersForCollection(col)
 
     // Static prefs are collection-scoped so all members share the same view
     setHiddenStatic(new Set(col.hidden_static   || []))
@@ -304,6 +305,7 @@ export default function App() {
 
   async function switchCollection(col) {
     setCollection(col)
+    loadFiltersForCollection(col)
     setHiddenStatic(new Set(col.hidden_static  || []))
     setDeletedStatic(new Set(col.deleted_static || []))
     localStorage.setItem('spectrum-active-collection', col.id)
@@ -410,8 +412,24 @@ export default function App() {
   }, [visibleSet, allMeta])
 
   // ── Actions ───────────────────────────────────────────────
-  function handleChange(key, val) { setValues(prev => ({ ...prev, [key]: val })) }
-  function handleReset()          { setValues(DEFAULT_VALUES) }
+  function loadFiltersForCollection(col) {
+    try {
+      const saved = localStorage.getItem(`spectrum-filters-${col.id}`)
+      setValues(saved ? JSON.parse(saved) : DEFAULT_VALUES)
+    } catch { setValues(DEFAULT_VALUES) }
+  }
+
+  function handleChange(key, val) {
+    setValues(prev => {
+      const next = { ...prev, [key]: val }
+      if (collection) localStorage.setItem(`spectrum-filters-${collection.id}`, JSON.stringify(next))
+      return next
+    })
+  }
+  function handleReset() {
+    setValues(DEFAULT_VALUES)
+    if (collection) localStorage.removeItem(`spectrum-filters-${collection.id}`)
+  }
 
   async function handleHide(filename) {
     const img = userImages.find(i => i.filename === filename)
