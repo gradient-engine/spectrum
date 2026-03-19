@@ -533,7 +533,12 @@ export default function App() {
   )
 
   if (showSetup && session) return (
-    <CollectionSetup session={session} onDone={handleCollectionCreated} pendingCode={pendingJoinCode} />
+    <CollectionSetup
+      session={session}
+      onDone={handleCollectionCreated}
+      pendingCode={pendingJoinCode}
+      onClose={collection ? () => setShowSetup(false) : null}
+    />
   )
 
   const isFiltering = activeCount > 0
@@ -549,10 +554,7 @@ export default function App() {
       <aside className="sidebar">
         <header className="sidebar__header">
           <div className="sidebar__header-top">
-            <div>
-              <div className="sidebar__title">Spectrum</div>
-              <div className="sidebar__sub">Brand Personality Filter</div>
-            </div>
+            <div className="sidebar__title">Spectrum</div>
             <div className="sidebar__header-actions">
               <button
                 className="dark-toggle"
@@ -561,7 +563,6 @@ export default function App() {
               >
                 {darkMode ? <SunIcon /> : <MoonIcon />}
               </button>
-              <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
               {user ? (
                 <button className="signout-btn" onClick={() => supabase.auth.signOut()} title="Sign out">
                   {user.user_metadata?.avatar_url
@@ -578,40 +579,44 @@ export default function App() {
               )}
             </div>
           </div>
-          {collection && (
-            <div className="sidebar__collection-wrap" ref={switcherRef}>
-              <button
-                className="sidebar__collection-trigger"
-                onClick={() => setShowCollectionSwitcher(v => !v)}
-              >
-                <span>{collection.name}</span>
-                <ChevronDownIcon />
-              </button>
-              {showCollectionSwitcher && (
-                <div className="collection-switcher">
-                  {allCollections.map(c => (
+
+          <div className="sidebar__header-meta">
+            {collection ? (
+              <div className="sidebar__collection-wrap" ref={switcherRef}>
+                <button
+                  className="sidebar__collection-trigger"
+                  onClick={() => setShowCollectionSwitcher(v => !v)}
+                >
+                  <span>{collection.name}</span>
+                  <ChevronDownIcon />
+                </button>
+                {showCollectionSwitcher && (
+                  <div className="collection-switcher">
+                    {allCollections.map(c => (
+                      <button
+                        key={c.id}
+                        className={`collection-switcher__item${c.id === collection.id ? ' collection-switcher__item--active' : ''}`}
+                        onClick={() => c.id === collection.id ? setShowCollectionSwitcher(false) : switchCollection(c)}
+                      >
+                        <span className="collection-switcher__name">{c.name}</span>
+                        {c.owner_id !== session?.user?.id && (
+                          <span className="collection-switcher__badge">shared</span>
+                        )}
+                      </button>
+                    ))}
+                    <div className="collection-switcher__divider" />
                     <button
-                      key={c.id}
-                      className={`collection-switcher__item${c.id === collection.id ? ' collection-switcher__item--active' : ''}`}
-                      onClick={() => c.id === collection.id ? setShowCollectionSwitcher(false) : switchCollection(c)}
+                      className="collection-switcher__new"
+                      onClick={() => { setShowSetup(true); setShowCollectionSwitcher(false) }}
                     >
-                      <span className="collection-switcher__name">{c.name}</span>
-                      {c.owner_id !== session?.user?.id && (
-                        <span className="collection-switcher__badge">shared</span>
-                      )}
+                      + New collection
                     </button>
-                  ))}
-                  <div className="collection-switcher__divider" />
-                  <button
-                    className="collection-switcher__new"
-                    onClick={() => { setShowSetup(true); setShowCollectionSwitcher(false) }}
-                  >
-                    + New collection
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                  </div>
+                )}
+              </div>
+            ) : <div />}
+            <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
+          </div>
         </header>
 
         <div className="sidebar__counter">

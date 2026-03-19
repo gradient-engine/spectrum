@@ -7,14 +7,36 @@
 }
 
 .collection-setup__card {
-  background: #fff;
+  position: relative;
+  background: var(--sidebar-bg);
   border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid var(--border);
   padding: 40px 40px 44px;
   width: 360px;
   display: flex;
   flex-direction: column;
+}
+
+/* Close button — shown when user can go back to the app */
+.collection-setup__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 5px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+.collection-setup__close:hover {
+  color: var(--text);
+  background: var(--bg);
 }
 
 .collection-setup__header {
@@ -26,7 +48,7 @@
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #111;
+  color: var(--text);
 }
 
 .collection-setup__sub {
@@ -81,7 +103,7 @@
 .collection-setup__desc {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
   line-height: 1.6;
   margin-bottom: 4px;
 }
