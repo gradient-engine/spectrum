@@ -45,12 +45,7 @@
   color: var(--text);
 }
 
-/* Current user — slightly muted */
-.presence__avatar--you {
-  opacity: 0.45;
-}
-
-/* Green live dot on other users' avatars */
+/* Green live dot — shown on all presence avatars (always other users) */
 .presence__live {
   position: absolute;
   bottom: 0;

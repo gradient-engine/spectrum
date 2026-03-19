@@ -94,18 +94,6 @@ body {
   min-height: 22px;
 }
 
-/* Compact presence avatars inside the meta row */
-.sidebar__header-meta .presence__avatar {
-  width: 22px;
-  height: 22px;
-}
-.sidebar__header-meta .presence__avatar span {
-  font-size: 8px;
-}
-.sidebar__header-meta .presence__live {
-  width: 5px;
-  height: 5px;
-}
 
 /* Sidebar header actions row */
 .sidebar__header-actions {

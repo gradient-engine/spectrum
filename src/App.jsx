@@ -563,6 +563,7 @@ export default function App() {
               >
                 {darkMode ? <SunIcon /> : <MoonIcon />}
               </button>
+              <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
               {user ? (
                 <button className="signout-btn" onClick={() => supabase.auth.signOut()} title="Sign out">
                   {user.user_metadata?.avatar_url
@@ -580,8 +581,8 @@ export default function App() {
             </div>
           </div>
 
+          {collection && (
           <div className="sidebar__header-meta">
-            {collection ? (
               <div className="sidebar__collection-wrap" ref={switcherRef}>
                 <button
                   className="sidebar__collection-trigger"
@@ -614,9 +615,8 @@ export default function App() {
                   </div>
                 )}
               </div>
-            ) : <div />}
-            <PresenceAvatars users={onlineUsers} currentUserId={session?.user?.id} />
           </div>
+          )}
         </header>
 
         <div className="sidebar__counter">
