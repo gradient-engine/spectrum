@@ -346,7 +346,10 @@ export default function App() {
   const [showHidden, setShowHidden] = useState(false)
   const [viewMode,   setViewMode]   = useState('grid')
   const [lensId,     setLensId]     = useState('market')
-  const fileInputRef = useRef(null)
+  const fileInputRef     = useRef(null)
+  const lastClipboardUrl = useRef('')
+  const [showUrlModal, setShowUrlModal] = useState(false)
+  const [urlInput,     setUrlInput]     = useState('')
 
   // ── Derived ───────────────────────────────────────────────
   const allImages = useMemo(() => [
@@ -528,6 +531,73 @@ export default function App() {
     }
   }
 
+  // ── Clipboard detection: auto-open URL modal when image URL is copied ──
+  useEffect(() => {
+    if (!session || !collection) return
+    const onFocus = async () => {
+      try {
+        const text = await navigator.clipboard.readText()
+        if (!text || text === lastClipboardUrl.current) return
+        const looksLikeImage =
+          /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif|avif|svg)/i.test(text) ||
+          /images\.(unsplash|squarespace)|cdn\.(dribbble|behance)|framerusercontent|imagekit/i.test(text)
+        if (looksLikeImage) {
+          lastClipboardUrl.current = text
+          setUrlInput(text)
+          setShowUrlModal(true)
+        }
+      } catch { /* clipboard permission denied — silent */ }
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [session, collection])
+
+  async function handleUrlImport(url) {
+    if (!url || !session || !collection) return
+    const filename = url.split('/').pop().split('?')[0] || `import-${Date.now()}`
+    const tempId   = `temp-url-${Date.now()}`
+    setShowUrlModal(false)
+    setUrlInput('')
+    setTagging(prev => [...prev, filename])
+    setUserImages(prev => [...prev, {
+      id: tempId, filename, url, tags: null, is_hidden: false, is_deleted: false,
+    }])
+
+    try {
+      const res = await fetch('/api/import-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const { tags, imageData, mimeType } = await res.json()
+
+      const ext         = mimeType.split('/')[1]?.split('+')[0] || 'jpg'
+      const storagePath = `${session.user.id}/${Date.now()}-${filename}.${ext}`
+      const bytes       = Uint8Array.from(atob(imageData), c => c.charCodeAt(0))
+      const blob        = new Blob([bytes], { type: mimeType })
+
+      const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(storagePath, blob)
+      if (uploadErr) throw uploadErr
+
+      const { data: newImg, error: dbErr } = await supabase.from('images').insert({
+        filename, storage_path: storagePath, tags,
+        user_id: session.user.id, collection_id: collection.id,
+      }).select().single()
+      if (dbErr) throw dbErr
+
+      setUserImages(prev => prev.map(i =>
+        i.id === tempId ? { ...newImg, url: getPublicUrl(storagePath) } : i
+      ))
+    } catch (err) {
+      console.error('URL import error:', err)
+      setUserImages(prev => prev.filter(i => i.id !== tempId))
+      setTagErrors(prev => [...prev, filename])
+    } finally {
+      setTagging(prev => prev.filter(n => n !== filename))
+    }
+  }
+
   function handleExport() {
     const out = {}
     for (const f of sortedImages) {
@@ -567,6 +637,31 @@ export default function App() {
     <div className="app">
       {showAuthOverlay && (
         <Auth onGuest={() => setShowAuthOverlay(false)} />
+      )}
+
+      {showUrlModal && (
+        <div className="url-modal-overlay" onClick={() => setShowUrlModal(false)}>
+          <div className="url-modal" onClick={e => e.stopPropagation()}>
+            <span className="url-modal__icon">🌐</span>
+            <input
+              className="url-modal__input"
+              type="url"
+              placeholder="https://"
+              value={urlInput}
+              autoFocus
+              onChange={e => setUrlInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && urlInput) handleUrlImport(urlInput)
+                if (e.key === 'Escape') setShowUrlModal(false)
+              }}
+            />
+            <button
+              className="url-modal__btn"
+              disabled={!urlInput}
+              onClick={() => handleUrlImport(urlInput)}
+            >Add URL</button>
+          </div>
+        </div>
       )}
 
       <aside className="sidebar">
@@ -687,13 +782,21 @@ export default function App() {
                   </div>
                 ) : (
                   <>
-                    <button
-                      className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
-                      onClick={handleUploadClick}
-                      disabled={isTagging}
-                    >
-                      {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}
-                    </button>
+                    <div className="upload-wrap">
+                      <button
+                        className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
+                        onClick={handleUploadClick}
+                        disabled={isTagging}
+                      >
+                        {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}
+                      </button>
+                      <button
+                        className="upload-url-btn"
+                        onClick={() => { if (!session) { setShowAuthOverlay(true); return }; setShowUrlModal(true) }}
+                        title="Import from URL"
+                        disabled={isTagging}
+                      >🔗</button>
+                    </div>
                     <input ref={fileInputRef} type="file" accept="image/*" multiple
                       style={{ display: 'none' }} onChange={handleFileSelect} />
                     {hiddenCount > 0 && (
