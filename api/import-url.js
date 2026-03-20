@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import sharp from 'sharp'
 
 const DIMENSIONS = [
   { key: 'minimal_decorative',        left: 'Minimal',      right: 'Decorative'    },
@@ -40,37 +41,55 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' })
 
-  try {
-    // 1. Tag using Claude's native URL image source
-    const client = new Anthropic({ apiKey })
-    const response = await client.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 256,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'url', url } },
-          { type: 'text', text: PROMPT },
-        ],
-      }],
-    })
-    const tags = JSON.parse(response.content[0].text)
+  const VIDEO_MIME = new Set(['video/mp4', 'video/quicktime', 'video/webm'])
+  const SUPPORTED_MIME = new Set([
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+    'video/mp4', 'video/quicktime', 'video/webm',
+  ])
 
-    // 2. Fetch image bytes for Supabase Storage upload
+  try {
+    // 1. Fetch bytes first so we know the real MIME type
     const imgRes = await fetch(url)
     if (!imgRes.ok) throw new Error(`Failed to fetch image: ${imgRes.status}`)
     const buffer    = await imgRes.arrayBuffer()
-    const imageData = Buffer.from(buffer).toString('base64')
-    const mimeType  = (imgRes.headers.get('content-type') || 'image/jpeg').split(';')[0].trim()
+    let imageBuffer = Buffer.from(buffer)
+    let mimeType    = (imgRes.headers.get('content-type') || 'image/jpeg').split(';')[0].trim()
 
-    const SUPPORTED_MIME = new Set([
-      'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
-      'video/mp4', 'video/quicktime', 'video/webm',
-    ])
     if (!SUPPORTED_MIME.has(mimeType)) {
       return res.status(400).json({ error: `Format not supported: ${mimeType}` })
     }
 
+    // 2. Tag with Claude (skip for video; convert AVIF → JPEG first)
+    let tags = {}
+    if (!VIDEO_MIME.has(mimeType)) {
+      let tagBuffer = imageBuffer
+      let tagMime   = mimeType
+
+      if (mimeType === 'image/avif') {
+        // Convert AVIF → JPEG for Claude (Claude doesn't accept AVIF)
+        // Also store the JPEG so the browser can display it
+        imageBuffer = await sharp(imageBuffer).jpeg({ quality: 90 }).toBuffer()
+        tagBuffer   = imageBuffer
+        tagMime     = 'image/jpeg'
+        mimeType    = 'image/jpeg'
+      }
+
+      const client   = new Anthropic({ apiKey })
+      const response = await client.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 256,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: tagMime, data: tagBuffer.toString('base64') } },
+            { type: 'text', text: PROMPT },
+          ],
+        }],
+      })
+      tags = JSON.parse(response.content[0].text)
+    }
+
+    const imageData = imageBuffer.toString('base64')
     return res.status(200).json({ tags, imageData, mimeType })
   } catch (err) {
     console.error('import-url error:', err)
