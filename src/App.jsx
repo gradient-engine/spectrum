@@ -481,9 +481,14 @@ export default function App() {
     e.target.value = ''
     if (!files.length || !session || !collection) return
 
-    const tooBig = files.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
+    const SUPPORTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+    const badType = files.filter(f => !SUPPORTED.includes(f.type))
+    if (badType.length) alert(`Unsupported format — use JPG, PNG, WebP or GIF:\n${badType.map(f => f.name).join('\n')}`)
+
+    const typed  = files.filter(f => SUPPORTED.includes(f.type))
+    const tooBig = typed.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
     if (tooBig.length) alert(`Skipped (>${MAX_FILE_MB}MB):\n${tooBig.map(f => f.name).join('\n')}`)
-    const valid = files.filter(f => f.size <= MAX_FILE_MB * 1024 * 1024)
+    const valid = typed.filter(f => f.size <= MAX_FILE_MB * 1024 * 1024)
     if (!valid.length) return
 
     setTagging(prev => [...prev, ...valid.map(f => f.name)])
@@ -797,7 +802,7 @@ export default function App() {
                         disabled={isTagging}
                       >🔗</button>
                     </div>
-                    <input ref={fileInputRef} type="file" accept="image/*" multiple
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple
                       style={{ display: 'none' }} onChange={handleFileSelect} />
                     {hiddenCount > 0 && (
                       <button
