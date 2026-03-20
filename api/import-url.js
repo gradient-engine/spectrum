@@ -47,27 +47,46 @@ export default async function handler(req, res) {
     'video/mp4', 'video/quicktime', 'video/webm',
   ])
 
+  // Guess MIME from URL extension as a fallback for CDNs that send octet-stream
+  function mimeFromUrl(u) {
+    const ext = u.split('?')[0].split('.').pop()?.toLowerCase()
+    const map = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+                  webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
+                  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' }
+    return map[ext] || null
+  }
+
   try {
-    // 1. Fetch bytes first so we know the real MIME type
-    const imgRes = await fetch(url)
+    // 1. Fetch bytes — send browser-like headers to avoid hotlink blocks (Savee, Dribbble, etc.)
+    const imgRes = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        'Referer': new URL(url).origin + '/',
+      },
+    })
     if (!imgRes.ok) throw new Error(`Failed to fetch image: ${imgRes.status}`)
     const buffer    = await imgRes.arrayBuffer()
     let imageBuffer = Buffer.from(buffer)
-    let mimeType    = (imgRes.headers.get('content-type') || 'image/jpeg').split(';')[0].trim()
+
+    // Some CDNs return application/octet-stream — fall back to URL extension
+    let mimeType = (imgRes.headers.get('content-type') || '').split(';')[0].trim()
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      mimeType = mimeFromUrl(url) || 'image/jpeg'
+    }
 
     if (!SUPPORTED_MIME.has(mimeType)) {
       return res.status(400).json({ error: `Format not supported: ${mimeType}` })
     }
 
-    // 2. Tag with Claude (skip for video; convert AVIF → JPEG first)
+    // 2. Tag with Claude — skip for video; convert AVIF → JPEG first
+    // Use claude-haiku for speed (stays well within Vercel's 10s timeout)
     let tags = {}
     if (!VIDEO_MIME.has(mimeType)) {
       let tagBuffer = imageBuffer
       let tagMime   = mimeType
 
       if (mimeType === 'image/avif') {
-        // Convert AVIF → JPEG for Claude (Claude doesn't accept AVIF)
-        // Also store the JPEG so the browser can display it
         imageBuffer = await sharp(imageBuffer).jpeg({ quality: 90 }).toBuffer()
         tagBuffer   = imageBuffer
         tagMime     = 'image/jpeg'
@@ -76,7 +95,7 @@ export default async function handler(req, res) {
 
       const client   = new Anthropic({ apiKey })
       const response = await client.messages.create({
-        model: 'claude-opus-4-5',
+        model: 'claude-haiku-4-5',
         max_tokens: 256,
         messages: [{
           role: 'user',
