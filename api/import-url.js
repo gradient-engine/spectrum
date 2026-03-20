@@ -87,15 +87,23 @@ export default async function handler(req, res) {
       let tagMime   = mimeType
 
       if (mimeType === 'image/avif') {
-        imageBuffer = await sharp(imageBuffer).jpeg({ quality: 90 }).toBuffer()
+        imageBuffer = await sharp(imageBuffer)
+          .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer()
         tagBuffer   = imageBuffer
         tagMime     = 'image/jpeg'
         mimeType    = 'image/jpeg'
+      } else {
+        // Cap non-AVIF images too to keep response under Vercel's 4.5MB limit
+        imageBuffer = await sharp(imageBuffer)
+          .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+          .toBuffer()
       }
 
       const client   = new Anthropic({ apiKey })
       const response = await client.messages.create({
-        model: 'claude-haiku-4-5',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 256,
         messages: [{
           role: 'user',
