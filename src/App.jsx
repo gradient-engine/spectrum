@@ -646,7 +646,12 @@ export default function App() {
     } catch (err) {
       console.error('URL import error:', err)
       setUserImages(prev => prev.filter(i => i.id !== tempId))
-      setUploadNotice({ msg: `Import failed: ${err.message}`, isError: true })
+      const msg = err.message?.includes('403') || err.message?.includes('fetch')
+        ? 'Import failed — this site blocks external access to its images'
+        : err.message?.includes('supported') || err.message?.includes('Format')
+          ? 'Import failed — unsupported file type'
+          : 'Import failed — try downloading the image and uploading directly'
+      setUploadNotice({ msg, isError: true })
       setTimeout(() => setUploadNotice(null), 8000)
     } finally {
       setTagging(prev => prev.filter(n => n !== filename))
