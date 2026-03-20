@@ -596,6 +596,18 @@ export default function App() {
 
   async function handleUrlImport(url) {
     if (!url || !session || !collection) return
+
+    // Reject known unsupported formats before any upload attempt
+    const UNSUPPORTED_EXTS = new Set(['avif', 'heic', 'heif', 'tiff', 'tif', 'bmp', 'svg', 'ico'])
+    const urlExt = url.split('?')[0].split('.').pop()?.toLowerCase()
+    if (UNSUPPORTED_EXTS.has(urlExt)) {
+      setUploadNotice({ msg: `${urlExt.toUpperCase()} not supported — use JPG, PNG, WebP, GIF or MP4`, isError: true })
+      setTimeout(() => setUploadNotice(null), 6000)
+      setShowUrlModal(false)
+      setUrlInput('')
+      return
+    }
+
     const filename = url.split('/').pop().split('?')[0] || `import-${Date.now()}`
     const tempId   = `temp-url-${Date.now()}`
     setShowUrlModal(false)

@@ -61,7 +61,15 @@ export default async function handler(req, res) {
     if (!imgRes.ok) throw new Error(`Failed to fetch image: ${imgRes.status}`)
     const buffer    = await imgRes.arrayBuffer()
     const imageData = Buffer.from(buffer).toString('base64')
-    const mimeType  = imgRes.headers.get('content-type') || 'image/jpeg'
+    const mimeType  = (imgRes.headers.get('content-type') || 'image/jpeg').split(';')[0].trim()
+
+    const SUPPORTED_MIME = new Set([
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+      'video/mp4', 'video/quicktime', 'video/webm',
+    ])
+    if (!SUPPORTED_MIME.has(mimeType)) {
+      return res.status(400).json({ error: `Format not supported: ${mimeType}` })
+    }
 
     return res.status(200).json({ tags, imageData, mimeType })
   } catch (err) {
