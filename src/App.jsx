@@ -72,6 +72,15 @@ function getPublicUrl(path) {
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
+function LinkIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </svg>
+  )
+}
+
 function ChevronDownIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -282,7 +291,7 @@ export default function App() {
       .from('images')
       .select('*')
       .eq('collection_id', col.id)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (imgs) {
       setUserImages(imgs.map(img => ({ ...img, url: getPublicUrl(img.storage_path) })))
@@ -314,7 +323,7 @@ export default function App() {
       .from('images')
       .select('*')
       .eq('collection_id', col.id)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
     if (imgs) setUserImages(imgs.map(img => ({ ...img, url: getPublicUrl(img.storage_path) })))
   }
 
@@ -342,7 +351,8 @@ export default function App() {
   // ── Slider / UI state ─────────────────────────────────────
   const [values,     setValues]     = useState(DEFAULT_VALUES)
   const [tagging,    setTagging]    = useState([])
-  const [tagErrors,  setTagErrors]  = useState([])
+  const [tagErrors,    setTagErrors]    = useState([])
+  const [uploadNotice, setUploadNotice] = useState(null)   // { msg, isError }
   const [showHidden, setShowHidden] = useState(false)
   const [viewMode,   setViewMode]   = useState('grid')
   const [lensId,     setLensId]     = useState('market')
@@ -483,12 +493,22 @@ export default function App() {
 
     const SUPPORTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
     const badType = files.filter(f => !SUPPORTED.includes(f.type))
-    if (badType.length) alert(`Unsupported format — use JPG, PNG, WebP or GIF:\n${badType.map(f => f.name).join('\n')}`)
+    const typed   = files.filter(f => SUPPORTED.includes(f.type))
+    const tooBig  = typed.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
+    const valid   = typed.filter(f => f.size <= MAX_FILE_MB * 1024 * 1024)
 
-    const typed  = files.filter(f => SUPPORTED.includes(f.type))
-    const tooBig = typed.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
-    if (tooBig.length) alert(`Skipped (>${MAX_FILE_MB}MB):\n${tooBig.map(f => f.name).join('\n')}`)
-    const valid = typed.filter(f => f.size <= MAX_FILE_MB * 1024 * 1024)
+    const notices = []
+    if (badType.length) {
+      const ext = badType.map(f => f.name.split('.').pop().toUpperCase()).join(', ')
+      notices.push(`${ext} not supported — use JPG, PNG, WebP or GIF`)
+    }
+    if (tooBig.length) {
+      notices.push(`${tooBig.map(f => f.name).join(', ')} exceeds the ${MAX_FILE_MB}MB limit`)
+    }
+    if (notices.length) {
+      setUploadNotice({ msg: notices.join(' · '), isError: true })
+      setTimeout(() => setUploadNotice(null), 6000)
+    }
     if (!valid.length) return
 
     setTagging(prev => [...prev, ...valid.map(f => f.name)])
@@ -503,7 +523,7 @@ export default function App() {
         id: tempId, filename: file.name, storage_path: storagePath,
         tags: null, is_hidden: false, is_deleted: false, url: dataUrl,
       }
-      setUserImages(prev => [...prev, tempImg])
+      setUserImages(prev => [tempImg, ...prev])
 
       try {
         const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(storagePath, file)
@@ -564,9 +584,9 @@ export default function App() {
     setShowUrlModal(false)
     setUrlInput('')
     setTagging(prev => [...prev, filename])
-    setUserImages(prev => [...prev, {
+    setUserImages(prev => [{
       id: tempId, filename, url, tags: null, is_hidden: false, is_deleted: false,
-    }])
+    }, ...prev])
 
     try {
       const res = await fetch('/api/import-url', {
@@ -647,7 +667,7 @@ export default function App() {
       {showUrlModal && (
         <div className="url-modal-overlay" onClick={() => setShowUrlModal(false)}>
           <div className="url-modal" onClick={e => e.stopPropagation()}>
-            <span className="url-modal__icon">🌐</span>
+            <span className="url-modal__icon"><LinkIcon /></span>
             <input
               className="url-modal__input"
               type="url"
@@ -800,7 +820,7 @@ export default function App() {
                         onClick={() => { if (!session) { setShowAuthOverlay(true); return }; setShowUrlModal(true) }}
                         title="Import from URL"
                         disabled={isTagging}
-                      >🔗</button>
+                      ><LinkIcon /></button>
                     </div>
                     <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple
                       style={{ display: 'none' }} onChange={handleFileSelect} />
@@ -812,9 +832,17 @@ export default function App() {
                         {showHidden ? 'Hide hidden' : `Show hidden (${hiddenCount})`}
                       </button>
                     )}
+                    {uploadNotice && (
+                      <span className="toolbar__notice toolbar__notice--error">
+                        {uploadNotice.msg}
+                        <button onClick={() => setUploadNotice(null)}>✕</button>
+                      </span>
+                    )}
                     {tagErrors.length > 0 && (
-                      <span className="toolbar__error">
-                        {tagErrors.length} failed
+                      <span className="toolbar__notice toolbar__notice--error">
+                        {tagErrors.length === 1
+                          ? `Tagging failed for ${tagErrors[0]}`
+                          : `${tagErrors.length} images failed to tag`}
                         <button onClick={() => setTagErrors([])}>✕</button>
                       </span>
                     )}
