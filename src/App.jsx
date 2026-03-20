@@ -44,7 +44,12 @@ const SPECTRUMS = [
 
 const ALL_KEYS       = SPECTRUMS.flatMap(g => g.items.map(i => i.key))
 const DEFAULT_VALUES = Object.fromEntries(ALL_KEYS.map(k => [k, 0]))
-const MAX_FILE_MB    = 5
+const MAX_FILE_MB    = 10
+const MAX_VIDEO_MB   = 5
+const IMAGE_TYPES    = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+const VIDEO_TYPES    = ['video/mp4', 'video/quicktime', 'video/webm']
+const VIDEO_EXTS     = new Set(['mp4', 'mov', 'webm'])
+const isVideoFile    = f => VIDEO_EXTS.has(f.split('.').pop()?.toLowerCase())
 
 function passes(imageValue, sliderValue) {
   if (sliderValue === 0) return true
@@ -392,9 +397,11 @@ export default function App() {
   )
 
   const visibleSet = useMemo(() => {
+    const filtering = ALL_KEYS.some(k => values[k] !== 0)
     const s = new Set()
     for (const f of allImages) {
       if (hiddenImages.has(f)) continue
+      if (filtering && isVideoFile(f)) continue  // videos hide when filters are active
       const meta = allMeta[f] || {}
       if (ALL_KEYS.every(k => passes(meta[k] ?? 0, values[k]))) s.add(f)
     }
@@ -492,20 +499,25 @@ export default function App() {
     e.target.value = ''
     if (!files.length || !session || !collection) return
 
-    const SUPPORTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-    const badType = files.filter(f => !SUPPORTED.includes(f.type))
-    const typed   = files.filter(f => SUPPORTED.includes(f.type))
-    const tooBig  = typed.filter(f => f.size > MAX_FILE_MB * 1024 * 1024)
-    const valid   = typed.filter(f => f.size <= MAX_FILE_MB * 1024 * 1024)
+    const ALL_SUPPORTED = [...IMAGE_TYPES, ...VIDEO_TYPES]
+    const badType   = files.filter(f => !ALL_SUPPORTED.includes(f.type))
+    const typed     = files.filter(f => ALL_SUPPORTED.includes(f.type))
+    const imgs      = typed.filter(f => IMAGE_TYPES.includes(f.type))
+    const vids      = typed.filter(f => VIDEO_TYPES.includes(f.type))
+    const tooBigImg = imgs.filter(f => f.size > MAX_FILE_MB   * 1024 * 1024)
+    const tooBigVid = vids.filter(f => f.size > MAX_VIDEO_MB  * 1024 * 1024)
+    const valid     = [
+      ...imgs.filter(f => f.size <= MAX_FILE_MB  * 1024 * 1024),
+      ...vids.filter(f => f.size <= MAX_VIDEO_MB * 1024 * 1024),
+    ]
 
     const notices = []
     if (badType.length) {
       const ext = badType.map(f => f.name.split('.').pop().toUpperCase()).join(', ')
-      notices.push(`${ext} not supported — use JPG, PNG, WebP or GIF`)
+      notices.push(`${ext} not supported — use JPG, PNG, WebP, GIF or MP4`)
     }
-    if (tooBig.length) {
-      notices.push(`${tooBig.map(f => f.name).join(', ')} exceeds the ${MAX_FILE_MB}MB limit`)
-    }
+    if (tooBigImg.length) notices.push(`${tooBigImg.map(f => f.name).join(', ')} over ${MAX_FILE_MB}MB`)
+    if (tooBigVid.length) notices.push(`${tooBigVid.map(f => f.name).join(', ')} over ${MAX_VIDEO_MB}MB (video limit)`)
     if (notices.length) {
       setUploadNotice({ msg: notices.join(' · '), isError: true })
       setTimeout(() => setUploadNotice(null), 6000)
@@ -530,13 +542,17 @@ export default function App() {
         const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(storagePath, file)
         if (uploadErr) throw uploadErr
 
-        const res = await fetch('/api/tag', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageData: base64, mimeType: file.type }),
-        })
-        if (!res.ok) throw new Error(await res.text())
-        const tags = await res.json()
+        // Videos: skip AI tagging — they're inspiration-only, hidden when filters are active
+        let tags = {}
+        if (IMAGE_TYPES.includes(file.type)) {
+          const res = await fetch('/api/tag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageData: base64, mimeType: file.type }),
+          })
+          if (!res.ok) throw new Error(await res.text())
+          tags = await res.json()
+        }
 
         const { data: newImg, error: dbErr } = await supabase.from('images').insert({
           filename: file.name, storage_path: storagePath, tags,
@@ -822,7 +838,7 @@ export default function App() {
                     >
                       <LinkIcon /> URL
                     </button>
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" multiple
                       style={{ display: 'none' }} onChange={handleFileSelect} />
                     {hiddenCount > 0 && (
                       <button

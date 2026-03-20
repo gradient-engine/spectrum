@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './ImageGrid.css'
 
-const EASE_OUT = [0.25, 0.46, 0.45, 0.94]
-const EASE_IN  = [0.55, 0.00, 0.55, 0.85]
+const EASE_OUT   = [0.25, 0.46, 0.45, 0.94]
+const EASE_IN    = [0.55, 0.00, 0.55, 0.85]
+const VIDEO_EXTS = new Set(['mp4', 'mov', 'webm'])
+const isVideo    = f => VIDEO_EXTS.has(f?.split('.').pop()?.toLowerCase())
 
 function IconEye() {
   return (
@@ -91,7 +93,10 @@ export default function ImageGrid({
                 className={`image-grid__item${dimmed ? ' image-grid__item--dimmed' : ''}`}
                 onClick={() => !dimmed && setLightbox(filename)}
               >
-                <img src={src} alt={filename} loading="lazy" />
+                {isVideo(filename)
+                  ? <video src={src} autoPlay muted loop playsInline />
+                  : <img src={src} alt={filename} loading="lazy" />
+                }
 
                 {!dimmed && (
                   <div className="image-grid__overlay">
@@ -141,13 +146,23 @@ export default function ImageGrid({
             exit={{ opacity: 0, transition: { duration: 0.18 } }}
             onClick={() => setLightbox(null)}
           >
-            <motion.img
-              src={urlMap[lightbox] || `/images/${lightbox}`}
-              alt={lightbox}
-              initial={{ scale: 0.88, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1, transition: { duration: 0.28, ease: EASE_OUT } }}
-              exit={{ scale: 0.92, opacity: 0, transition: { duration: 0.2, ease: EASE_IN } }}
-            />
+            {isVideo(lightbox) ? (
+              <motion.video
+                src={urlMap[lightbox]}
+                controls autoPlay loop
+                initial={{ scale: 0.88, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, transition: { duration: 0.28, ease: EASE_OUT } }}
+                exit={{ scale: 0.92, opacity: 0, transition: { duration: 0.2, ease: EASE_IN } }}
+              />
+            ) : (
+              <motion.img
+                src={urlMap[lightbox] || `/images/${lightbox}`}
+                alt={lightbox}
+                initial={{ scale: 0.88, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, transition: { duration: 0.28, ease: EASE_OUT } }}
+                exit={{ scale: 0.92, opacity: 0, transition: { duration: 0.2, ease: EASE_IN } }}
+              />
+            )}
             <button className="lightbox__close" onClick={() => setLightbox(null)}>✕</button>
           </motion.div>
         )}
