@@ -46,7 +46,7 @@ const ALL_KEYS       = SPECTRUMS.flatMap(g => g.items.map(i => i.key))
 const DEFAULT_VALUES = Object.fromEntries(ALL_KEYS.map(k => [k, 0]))
 const MAX_FILE_MB    = 10
 const MAX_VIDEO_MB   = 5
-const IMAGE_TYPES    = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+const IMAGE_TYPES    = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
 const VIDEO_TYPES    = ['video/mp4', 'video/quicktime', 'video/webm']
 const VIDEO_EXTS     = new Set(['mp4', 'mov', 'webm'])
 const isVideoFile    = f => VIDEO_EXTS.has(f.split('.').pop()?.toLowerCase())
@@ -598,7 +598,7 @@ export default function App() {
     if (!url || !session || !collection) return
 
     // Reject known unsupported formats before any upload attempt
-    const UNSUPPORTED_EXTS = new Set(['avif', 'heic', 'heif', 'tiff', 'tif', 'bmp', 'svg', 'ico'])
+    const UNSUPPORTED_EXTS = new Set(['heic', 'heif', 'tiff', 'tif', 'bmp', 'svg', 'ico'])
     const urlExt = url.split('?')[0].split('.').pop()?.toLowerCase()
     if (UNSUPPORTED_EXTS.has(urlExt)) {
       setUploadNotice({ msg: `${urlExt.toUpperCase()} not supported — use JPG, PNG, WebP, GIF or MP4`, isError: true })
@@ -850,7 +850,7 @@ export default function App() {
                     >
                       <LinkIcon /> URL
                     </button>
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" multiple
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/quicktime,video/webm" multiple
                       style={{ display: 'none' }} onChange={handleFileSelect} />
                     {hiddenCount > 0 && (
                       <button
