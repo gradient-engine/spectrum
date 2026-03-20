@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import sharp from 'sharp'
 
 const DIMENSIONS = [
   { key: 'minimal_decorative',       left: 'Minimal',      right: 'Decorative'    },
@@ -50,6 +51,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Claude doesn't accept AVIF — convert to JPEG first
+    let tagData = imageData
+    let tagMime = mimeType
+    if (mimeType === 'image/avif') {
+      const buf = Buffer.from(imageData, 'base64')
+      tagData   = (await sharp(buf).jpeg({ quality: 90 }).toBuffer()).toString('base64')
+      tagMime   = 'image/jpeg'
+    }
+
     const client = new Anthropic({ apiKey })
 
     const response = await client.messages.create({
@@ -58,7 +68,7 @@ export default async function handler(req, res) {
       messages: [{
         role: 'user',
         content: [
-          { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageData } },
+          { type: 'image', source: { type: 'base64', media_type: tagMime, data: tagData } },
           { type: 'text', text: PROMPT },
         ],
       }],
