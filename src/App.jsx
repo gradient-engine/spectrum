@@ -646,7 +646,8 @@ export default function App() {
     } catch (err) {
       console.error('URL import error:', err)
       setUserImages(prev => prev.filter(i => i.id !== tempId))
-      setTagErrors(prev => [...prev, filename])
+      setUploadNotice({ msg: `Import failed: ${err.message}`, isError: true })
+      setTimeout(() => setUploadNotice(null), 8000)
     } finally {
       setTagging(prev => prev.filter(n => n !== filename))
     }
