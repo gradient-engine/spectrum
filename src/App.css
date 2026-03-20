@@ -484,37 +484,39 @@ body {
   cursor: default;
 }
 
-/* URL import split button — tucked right against the upload button */
-.upload-wrap {
-  display: flex;
-  align-items: center;
-}
-
-.upload-wrap .upload-btn {
-  border-radius: 8px 0 0 8px;
-}
-
+/* URL import button — standalone secondary pill */
 .upload-url-btn {
-  height: 30px;
-  width: 28px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
   background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-  color: var(--muted);
+  color: var(--text);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .upload-url-btn:hover:not(:disabled) {
-  color: var(--text);
-  background: var(--sidebar-bg);
+  border-color: var(--text);
 }
 .upload-url-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+[data-theme="dark"] .upload-url-btn {
+  background: transparent;
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.75);
+}
+[data-theme="dark"] .upload-url-btn:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.5);
+  color: #fff;
 }
 
 /* URL import floating modal — matches the screenshot bar style */

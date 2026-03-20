@@ -363,8 +363,9 @@ export default function App() {
 
   // ── Derived ───────────────────────────────────────────────
   const allImages = useMemo(() => [
-    ...Object.keys(metadata).filter(f => !deletedStatic.has(f)),
+    // Uploaded images first (newest first per DB order), then static reference library
     ...userImages.filter(img => !img.is_deleted).map(img => img.filename),
+    ...Object.keys(metadata).filter(f => !deletedStatic.has(f)),
   ], [userImages, deletedStatic])
 
   const urlMap = useMemo(() => {
@@ -807,21 +808,20 @@ export default function App() {
                   </div>
                 ) : (
                   <>
-                    <div className="upload-wrap">
-                      <button
-                        className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
-                        onClick={handleUploadClick}
-                        disabled={isTagging}
-                      >
-                        {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}
-                      </button>
-                      <button
-                        className="upload-url-btn"
-                        onClick={() => { if (!session) { setShowAuthOverlay(true); return }; setShowUrlModal(true) }}
-                        title="Import from URL"
-                        disabled={isTagging}
-                      ><LinkIcon /></button>
-                    </div>
+                    <button
+                      className={`upload-btn${isTagging ? ' upload-btn--loading' : ''}`}
+                      onClick={handleUploadClick}
+                      disabled={isTagging}
+                    >
+                      {isTagging ? `Tagging ${tagging.length}…` : '+ Add Images'}
+                    </button>
+                    <button
+                      className="upload-url-btn"
+                      onClick={() => { if (!session) { setShowAuthOverlay(true); return }; setShowUrlModal(true) }}
+                      disabled={isTagging}
+                    >
+                      <LinkIcon /> URL
+                    </button>
                     <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple
                       style={{ display: 'none' }} onChange={handleFileSelect} />
                     {hiddenCount > 0 && (
