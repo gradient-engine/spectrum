@@ -582,7 +582,9 @@ export default function App() {
         if (!text || text === lastClipboardUrl.current) return
         const looksLikeImage =
           /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif|avif|svg)/i.test(text) ||
-          /images\.(unsplash|squarespace)|cdn\.(dribbble|behance)|framerusercontent|imagekit/i.test(text)
+          /[?&]format=(jpeg|jpg|png|webp|avif|gif)/i.test(text) ||
+          /images\.(unsplash|squarespace)|cdn\.(dribbble|behance)|framerusercontent|imagekit/i.test(text) ||
+          /cdn\.cosmos\.so|assets\.savee\.it|res\.cloudinary\.com|imagedelivery\.net|ugc\.production\.listennotes/i.test(text)
         if (looksLikeImage) {
           lastClipboardUrl.current = text
           setUrlInput(text)

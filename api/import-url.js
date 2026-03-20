@@ -47,13 +47,17 @@ export default async function handler(req, res) {
     'video/mp4', 'video/quicktime', 'video/webm',
   ])
 
-  // Guess MIME from URL extension as a fallback for CDNs that send octet-stream
+  // Guess MIME from URL extension or ?format= param as fallback for CDNs that send octet-stream
   function mimeFromUrl(u) {
+    const extMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+                     webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
+                     mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' }
+    // Check ?format= or &format= query param first (e.g. cosmos.so ?format=jpeg)
+    const fmt = u.match(/[?&]format=([a-z0-9]+)/i)?.[1]?.toLowerCase()
+    if (fmt && extMap[fmt]) return extMap[fmt]
+    // Fall back to file extension
     const ext = u.split('?')[0].split('.').pop()?.toLowerCase()
-    const map = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-                  webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
-                  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' }
-    return map[ext] || null
+    return extMap[ext] || null
   }
 
   try {
@@ -99,6 +103,7 @@ export default async function handler(req, res) {
         imageBuffer = await sharp(imageBuffer)
           .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
           .toBuffer()
+        tagBuffer = imageBuffer
       }
 
       const client   = new Anthropic({ apiKey })
