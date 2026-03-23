@@ -170,3 +170,12 @@
 .lightbox__close:hover {
   opacity: 1;
 }
+
+@media (max-width: 768px) {
+  .image-grid {
+    columns: 2 140px;
+    column-gap: 8px;
+    padding: 8px;
+  }
+  .lightbox { padding: 16px; }
+}

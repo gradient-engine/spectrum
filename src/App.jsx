@@ -168,6 +168,7 @@ export default function App() {
   const [pendingJoinCode,        setPendingJoinCode]        = useState(null)
   const [onlineUsers,            setOnlineUsers]            = useState([])
   const [copied,                 setCopied]                 = useState(false)
+  const [sheetOpen,              setSheetOpen]              = useState(false)
   const switcherRef = useRef(null)
 
   useEffect(() => {
@@ -726,7 +727,13 @@ export default function App() {
         </div>
       )}
 
-      <aside className="sidebar">
+      <aside className={`sidebar${sheetOpen ? ' sidebar--open' : ''}`}>
+        <div className="sidebar__handle" onClick={() => setSheetOpen(v => !v)}>
+          <div className="sidebar__handle-pill" />
+          {!sheetOpen && isFiltering && (
+            <span className="sidebar__handle-label">{activeCount} active</span>
+          )}
+        </div>
         <header className="sidebar__header">
           <div className="sidebar__header-top">
             <div className="sidebar__title">Spectrum</div>

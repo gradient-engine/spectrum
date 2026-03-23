@@ -881,3 +881,52 @@ body {
   color: var(--text);
 }
 [data-theme="dark"] .share-btn:hover { background: #2a2a2a; }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .app { flex-direction: column; }
+
+  /* Bottom sheet */
+  .sidebar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    width: 100%; max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+    border-top: 1px solid var(--border);
+    border-right: none;
+    transform: translateY(calc(100% - 56px));
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 200;
+    margin: 0;
+    overflow-y: auto;
+    top: auto;
+  }
+  .sidebar--open { transform: translateY(0); }
+
+  /* Handle */
+  .sidebar__handle {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 56px; cursor: pointer; flex-shrink: 0;
+  }
+  .sidebar__handle-pill {
+    width: 36px; height: 4px; border-radius: 2px; background: var(--border);
+  }
+  .sidebar__handle-label {
+    font-size: 11px; color: var(--accent); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  /* Main fills full screen */
+  .app  { width: 100%; overflow-x: hidden; }
+  .main { padding-bottom: 64px; width: 100%; min-width: 0; padding-left: 0; padding-right: 0; }
+
+  /* Toolbar */
+  .toolbar { flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
+  .export-btn, .show-hidden-btn, .toolbar__right { display: none; }
+
+  /* URL modal full-width */
+  .url-modal { width: calc(100vw - 32px); }
+}
+
+/* Handle hidden on desktop */
+.sidebar__handle { display: none; }
