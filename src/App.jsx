@@ -118,6 +118,25 @@ function SunIcon() {
   )
 }
 
+function FilterIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
+      <line x1="11" y1="18" x2="13" y2="18"/>
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  )
+}
+
 export default function App() {
   // ── Dark mode ─────────────────────────────────────────────
   const [darkMode, setDarkMode] = useState(() => {
@@ -169,7 +188,8 @@ export default function App() {
   const [onlineUsers,            setOnlineUsers]            = useState([])
   const [copied,                 setCopied]                 = useState(false)
   const [sheetOpen,              setSheetOpen]              = useState(false)
-  const switcherRef = useRef(null)
+  const switcherRef       = useRef(null)
+  const mobileSwitcherRef = useRef(null)
 
   useEffect(() => {
     if (!collection || !session) return
@@ -337,9 +357,9 @@ export default function App() {
   useEffect(() => {
     if (!showCollectionSwitcher) return
     function onMouseDown(e) {
-      if (switcherRef.current && !switcherRef.current.contains(e.target)) {
-        setShowCollectionSwitcher(false)
-      }
+      const inDesktop = switcherRef.current?.contains(e.target)
+      const inMobile  = mobileSwitcherRef.current?.contains(e.target)
+      if (!inDesktop && !inMobile) setShowCollectionSwitcher(false)
     }
     document.addEventListener('mousedown', onMouseDown)
     return () => document.removeEventListener('mousedown', onMouseDown)
@@ -727,6 +747,55 @@ export default function App() {
         </div>
       )}
 
+      {/* ── Mobile top nav ─────────────────────────────────── */}
+      <div className="mobile-nav">
+        <div className="mobile-nav__left" ref={mobileSwitcherRef}>
+          <button
+            className="mobile-nav__collection-btn"
+            onClick={() => collection && setShowCollectionSwitcher(v => !v)}
+          >
+            <span className="mobile-nav__title">Spectrum</span>
+            {collection && <ChevronDownIcon />}
+          </button>
+          {showCollectionSwitcher && collection && (
+            <div className="collection-switcher">
+              {allCollections.map(c => (
+                <button
+                  key={c.id}
+                  className={`collection-switcher__item${c.id === collection.id ? ' collection-switcher__item--active' : ''}`}
+                  onClick={() => c.id === collection.id ? setShowCollectionSwitcher(false) : switchCollection(c)}
+                >
+                  <span className="collection-switcher__name">{c.name}</span>
+                  {c.owner_id !== session?.user?.id && (
+                    <span className="collection-switcher__badge">shared</span>
+                  )}
+                </button>
+              ))}
+              <div className="collection-switcher__divider" />
+              <button
+                className="collection-switcher__new"
+                onClick={() => { setShowSetup(true); setShowCollectionSwitcher(false) }}
+              >+ New collection</button>
+            </div>
+          )}
+        </div>
+        <div className="mobile-nav__right">
+          <button className="dark-toggle" onClick={() => setDarkMode(v => !v)} title={darkMode ? 'Light mode' : 'Dark mode'}>
+            {darkMode ? <SunIcon /> : <MoonIcon />}
+          </button>
+          {user ? (
+            <button className="signout-btn" onClick={() => supabase.auth.signOut()} title="Sign out">
+              {user.user_metadata?.avatar_url
+                ? <img src={user.user_metadata.avatar_url} alt="" className="signout-btn__avatar" />
+                : <span className="signout-btn__initial">{(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}</span>
+              }
+            </button>
+          ) : (
+            <button className="signin-pill" onClick={() => setShowAuthOverlay(true)}>Sign in</button>
+          )}
+        </div>
+      </div>
+
       <aside className={`sidebar${sheetOpen ? ' sidebar--open' : ''}`}>
         <div className="sidebar__handle" onClick={() => setSheetOpen(v => !v)}>
           <div className="sidebar__handle-pill" />
@@ -947,6 +1016,18 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* ── Mobile FABs ─────────────────────────────────────── */}
+      {sheetOpen && <div className="mobile-sheet-backdrop" onClick={() => setSheetOpen(false)} />}
+      <div className="mobile-fabs">
+        <button className="mobile-fab mobile-fab--filter" onClick={() => setSheetOpen(v => !v)}>
+          <FilterIcon />
+          {isFiltering && <span className="mobile-fab__dot" />}
+        </button>
+        <button className="mobile-fab mobile-fab--add" onClick={handleUploadClick} disabled={isTagging}>
+          <PlusIcon />
+        </button>
+      </div>
     </div>
   )
 }

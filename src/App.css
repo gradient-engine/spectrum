@@ -882,51 +882,112 @@ body {
 }
 [data-theme="dark"] .share-btn:hover { background: #2a2a2a; }
 
+/* Mobile-only elements hidden by default (desktop) */
+.mobile-nav           { display: none; }
+.mobile-fabs          { display: none; }
+.mobile-sheet-backdrop{ display: none; }
+.sidebar__handle      { display: none; }
+
 /* ── Mobile ───────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .app { flex-direction: column; }
+  .app  { flex-direction: column; width: 100%; overflow-x: hidden; }
+  .main { width: 100%; min-width: 0; padding-left: 0; padding-right: 0;
+          padding-top: 64px; padding-bottom: 120px; }
 
-  /* Bottom sheet */
+  /* Filter bottom sheet — fully hidden when closed */
   .sidebar {
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    bottom: 0; left: 0; right: 0; top: auto;
     width: 100%; max-height: 85vh;
     border-radius: 20px 20px 0 0;
     border-top: 1px solid var(--border);
     border-right: none;
-    transform: translateY(calc(100% - 56px));
+    transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
     z-index: 200;
     margin: 0;
     overflow-y: auto;
-    top: auto;
   }
   .sidebar--open { transform: translateY(0); }
+  .sidebar__handle { display: none !important; }
 
-  /* Handle */
-  .sidebar__handle {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    height: 56px; cursor: pointer; flex-shrink: 0;
-  }
-  .sidebar__handle-pill {
-    width: 36px; height: 4px; border-radius: 2px; background: var(--border);
-  }
-  .sidebar__handle-label {
-    font-size: 11px; color: var(--accent); font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
-
-  /* Main fills full screen */
-  .app  { width: 100%; overflow-x: hidden; }
-  .main { padding-bottom: 64px; width: 100%; min-width: 0; padding-left: 0; padding-right: 0; }
-
-  /* Toolbar */
-  .toolbar { flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
-  .export-btn, .show-hidden-btn, .toolbar__right { display: none; }
+  /* Toolbar replaced by mobile-nav + FABs */
+  .toolbar { display: none; }
 
   /* URL modal full-width */
   .url-modal { width: calc(100vw - 32px); }
+
+  /* ── Mobile top nav ── */
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 150;
+    height: 56px;
+    padding: 0 16px;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .mobile-nav__left {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .mobile-nav__collection-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none; cursor: pointer; padding: 0;
+    color: var(--text);
+  }
+  .mobile-nav__title {
+    font-weight: 700; font-size: 17px;
+    letter-spacing: -0.02em; color: var(--text);
+  }
+  .mobile-nav__right {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mobile-nav__left .collection-switcher {
+    top: calc(100% + 10px);
+    left: 0;
+    min-width: 200px;
+  }
+
+  /* ── Backdrop ── */
+  .mobile-sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    background: rgba(0,0,0,0.4);
+  }
+
+  /* ── FABs ── */
+  .mobile-fabs {
+    display: flex;
+    position: fixed;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 16px;
+    z-index: 210;
+  }
+  .mobile-fab {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-fab--filter { background: var(--sidebar-bg); color: var(--text); }
+  .mobile-fab--add    { background: #ffffff; color: #111111; }
+  .mobile-fab__dot {
+    position: absolute; top: 5px; right: 5px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid var(--bg);
+  }
 }
 
-/* Handle hidden on desktop */
-.sidebar__handle { display: none; }
