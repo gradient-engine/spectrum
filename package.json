@@ -9,11 +9,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",
-    "sharp": "^0.33.5",
     "@supabase/supabase-js": "^2.99.2",
     "framer-motion": "^12.38.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
